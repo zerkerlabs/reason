@@ -1,0 +1,64 @@
+{
+  "schema": "zerker.reason.program.v2",
+  "evaluation_time": "2026-08-14T12:00:00Z",
+  "ontology": {
+    "id": "software-release",
+    "version": "0.2.0",
+    "predicates": {
+      "tests_passed": { "arguments": ["string"] },
+      "security_reviewed": { "arguments": ["string"] },
+      "approved": { "arguments": ["string", "string"] },
+      "release_ready": { "arguments": ["string", "string"] }
+    }
+  },
+  "authority": {
+    "classes": ["tool-reported", "human-authorized"],
+    "default_admit": ["tool-reported", "human-authorized"],
+    "predicate_admit": {
+      "tests_passed": ["tool-reported"],
+      "security_reviewed": ["human-authorized"],
+      "approved": ["human-authorized"]
+    }
+  },
+  "facts": [
+    {
+      "id": "fact_tests_old_commit",
+      "predicate": "tests_passed",
+      "arguments": ["commit_old"],
+      "authority": "tool-reported",
+      "observed_at": "2026-08-14T11:00:00Z"
+    },
+    {
+      "id": "fact_review_new_commit",
+      "predicate": "security_reviewed",
+      "arguments": ["commit_new"],
+      "authority": "human-authorized",
+      "observed_at": "2026-08-14T11:05:00Z"
+    },
+    {
+      "id": "fact_approval_140",
+      "predicate": "approved",
+      "arguments": ["1.4.0", "release-manager"],
+      "authority": "human-authorized",
+      "observed_at": "2026-08-14T11:10:00Z"
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule_release_ready",
+      "when": [
+        { "predicate": "tests_passed", "arguments": ["$commit"] },
+        { "predicate": "security_reviewed", "arguments": ["$commit"] },
+        { "predicate": "approved", "arguments": ["$version", "release-manager"] }
+      ],
+      "then": {
+        "predicate": "release_ready",
+        "arguments": ["$version", "$commit"]
+      }
+    }
+  ],
+  "query": {
+    "predicate": "release_ready",
+    "arguments": ["1.4.0", "commit_new"]
+  }
+}

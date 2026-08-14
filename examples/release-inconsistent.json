@@ -1,0 +1,68 @@
+{
+  "schema": "zerker.reason.program.v1",
+  "ontology": {
+    "id": "software-release",
+    "version": "0.1.0",
+    "predicates": {
+      "tests_passed": { "arguments": ["string"] },
+      "security_reviewed": { "arguments": ["string"] },
+      "approved": { "arguments": ["string", "string"] },
+      "release_ready": { "arguments": ["string", "string"] }
+    }
+  },
+  "authority": {
+    "classes": ["agent-proposed", "tool-reported", "human-authorized"],
+    "default_admit": ["tool-reported", "human-authorized"],
+    "predicate_admit": {
+      "tests_passed": ["tool-reported"],
+      "security_reviewed": ["human-authorized"],
+      "approved": ["human-authorized"],
+      "release_ready": ["human-authorized"]
+    }
+  },
+  "facts": [
+    {
+      "id": "fact_tests_abc",
+      "predicate": "tests_passed",
+      "arguments": ["commit_abc"],
+      "authority": "tool-reported"
+    },
+    {
+      "id": "fact_review_abc",
+      "predicate": "security_reviewed",
+      "arguments": ["commit_abc"],
+      "authority": "human-authorized"
+    },
+    {
+      "id": "fact_approval_140",
+      "predicate": "approved",
+      "arguments": ["1.4.0", "release-manager"],
+      "authority": "human-authorized"
+    },
+    {
+      "id": "fact_release_blocked_140",
+      "predicate": "release_ready",
+      "arguments": ["1.4.0", "commit_abc"],
+      "negated": true,
+      "authority": "human-authorized"
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule_release_ready",
+      "when": [
+        { "predicate": "tests_passed", "arguments": ["$commit"] },
+        { "predicate": "security_reviewed", "arguments": ["$commit"] },
+        { "predicate": "approved", "arguments": ["$version", "release-manager"] }
+      ],
+      "then": {
+        "predicate": "release_ready",
+        "arguments": ["$version", "$commit"]
+      }
+    }
+  ],
+  "query": {
+    "predicate": "release_ready",
+    "arguments": ["1.4.0", "commit_abc"]
+  }
+}

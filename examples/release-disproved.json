@@ -1,0 +1,31 @@
+{
+  "schema": "zerker.reason.program.v1",
+  "ontology": {
+    "id": "software-release",
+    "version": "0.1.0",
+    "predicates": {
+      "release_ready": { "arguments": ["string", "string"] }
+    }
+  },
+  "authority": {
+    "classes": ["agent-proposed", "tool-reported", "human-authorized"],
+    "default_admit": ["human-authorized"],
+    "predicate_admit": {
+      "release_ready": ["human-authorized"]
+    }
+  },
+  "facts": [
+    {
+      "id": "fact_release_blocked_140",
+      "predicate": "release_ready",
+      "arguments": ["1.4.0", "commit_abc"],
+      "negated": true,
+      "authority": "human-authorized"
+    }
+  ],
+  "rules": [],
+  "query": {
+    "predicate": "release_ready",
+    "arguments": ["1.4.0", "commit_abc"]
+  }
+}

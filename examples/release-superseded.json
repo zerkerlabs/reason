@@ -1,0 +1,85 @@
+{
+  "schema": "zerker.reason.program.v2",
+  "evaluation_time": "2026-08-14T12:00:00Z",
+  "ontology": {
+    "id": "software-release",
+    "version": "0.2.0",
+    "predicates": {
+      "tests_passed": { "arguments": ["string"] },
+      "security_reviewed": { "arguments": ["string"] },
+      "approved": { "arguments": ["string", "string"] },
+      "release_ready": { "arguments": ["string", "string"] }
+    }
+  },
+  "authority": {
+    "classes": ["agent-proposed", "tool-reported", "human-authorized"],
+    "default_admit": ["tool-reported", "human-authorized"],
+    "predicate_admit": {
+      "tests_passed": ["tool-reported"],
+      "security_reviewed": ["human-authorized"],
+      "approved": ["human-authorized"]
+    }
+  },
+  "facts": [
+    {
+      "id": "fact_tests_abc",
+      "predicate": "tests_passed",
+      "arguments": ["commit_abc"],
+      "authority": "tool-reported",
+      "observed_at": "2026-08-14T10:00:00Z"
+    },
+    {
+      "id": "fact_review_abc_original",
+      "predicate": "security_reviewed",
+      "arguments": ["commit_abc"],
+      "authority": "human-authorized",
+      "observed_at": "2026-08-14T10:05:00Z"
+    },
+    {
+      "id": "fact_review_abc_revoked",
+      "predicate": "security_reviewed",
+      "arguments": ["commit_abc"],
+      "negated": true,
+      "authority": "human-authorized",
+      "observed_at": "2026-08-14T11:30:00Z",
+      "supersedes": ["fact_review_abc_original"]
+    },
+    {
+      "id": "fact_approval_140",
+      "predicate": "approved",
+      "arguments": ["1.4.0", "release-manager"],
+      "authority": "human-authorized",
+      "observed_at": "2026-08-14T10:10:00Z"
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule_release_ready",
+      "when": [
+        { "predicate": "tests_passed", "arguments": ["$commit"] },
+        { "predicate": "security_reviewed", "arguments": ["$commit"] },
+        { "predicate": "approved", "arguments": ["$version", "release-manager"] }
+      ],
+      "then": {
+        "predicate": "release_ready",
+        "arguments": ["$version", "$commit"]
+      }
+    },
+    {
+      "id": "rule_release_not_ready_after_revocation",
+      "when": [
+        { "predicate": "security_reviewed", "arguments": ["$commit"], "negated": true },
+        { "predicate": "approved", "arguments": ["$version", "release-manager"] }
+      ],
+      "then": {
+        "predicate": "release_ready",
+        "arguments": ["$version", "$commit"],
+        "negated": true
+      }
+    }
+  ],
+  "query": {
+    "predicate": "release_ready",
+    "arguments": ["1.4.0", "commit_abc"]
+  }
+}

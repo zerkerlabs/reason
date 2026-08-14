@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --generate-notes
+
+  build:
+    name: ${{ matrix.name }}
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x86_64
+            os: ubuntu-latest
+          - name: macOS arm64
+            os: macos-14
+          - name: macOS x86_64
+            os: macos-13
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+
+      - name: Build release binary
+        run: cargo build --release --locked --bin reason
+
+      - name: Package binary
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          HOST="$(rustc -vV | awk '/^host:/ {print $2}')"
+          ARCHIVE="zerker-reason-${GITHUB_REF_NAME}-${HOST}.tar.gz"
+          mkdir package
+          cp target/release/reason README.md LICENSE package/
+          tar -czf "$ARCHIVE" -C package reason README.md LICENSE
+          shasum -a 256 "$ARCHIVE" >"$ARCHIVE.sha256"
+          echo "archive=$ARCHIVE" >>"$GITHUB_OUTPUT"
+
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" \
+            "${{ steps.package.outputs.archive }}" \
+            "${{ steps.package.outputs.archive }}.sha256" \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber

@@ -1,0 +1,65 @@
+{
+  "schema": "zerker.reason.program.v2",
+  "evaluation_time": "2026-08-14T12:15:00Z",
+  "ontology": {
+    "id": "software-release",
+    "version": "0.2.0",
+    "predicates": {
+      "approved": { "arguments": ["string", "string"] },
+      "release_ready": { "arguments": ["string", "string"] }
+    }
+  },
+  "authority": {
+    "classes": ["human-authorized"],
+    "default_admit": ["human-authorized"],
+    "predicate_admit": {}
+  },
+  "facts": [
+    {
+      "id": "fact_approval_140",
+      "predicate": "approved",
+      "arguments": ["1.4.0", "release-manager"],
+      "authority": "human-authorized",
+      "observed_at": "2026-08-14T11:00:00Z",
+      "valid_from": "2026-08-14T12:00:00Z",
+      "valid_until": "2026-08-14T12:30:00Z"
+    },
+    {
+      "id": "fact_rejection_140",
+      "predicate": "approved",
+      "arguments": ["1.4.0", "release-manager"],
+      "negated": true,
+      "authority": "human-authorized",
+      "observed_at": "2026-08-14T11:30:00Z",
+      "valid_from": "2026-08-14T12:10:00Z",
+      "valid_until": "2026-08-14T13:00:00Z"
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule_approval_allows_release",
+      "when": [
+        { "predicate": "approved", "arguments": ["$version", "release-manager"] }
+      ],
+      "then": {
+        "predicate": "release_ready",
+        "arguments": ["$version", "commit_abc"]
+      }
+    },
+    {
+      "id": "rule_rejection_blocks_release",
+      "when": [
+        { "predicate": "approved", "arguments": ["$version", "release-manager"], "negated": true }
+      ],
+      "then": {
+        "predicate": "release_ready",
+        "arguments": ["$version", "commit_abc"],
+        "negated": true
+      }
+    }
+  ],
+  "query": {
+    "predicate": "release_ready",
+    "arguments": ["1.4.0", "commit_abc"]
+  }
+}
