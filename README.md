@@ -2,7 +2,7 @@
 
 A trustworthy neuro-symbolic reasoning coprocessor for agents.
 
-> **Developer preview:** explore the [live certificate demo](https://reason.zerker.ai) or start with the [deployment quickstart](docs/QUICKSTART.md).
+> **Developer preview:** explore the [live certificate demo](https://zerker-reason.vercel.app) or start with the [deployment quickstart](docs/QUICKSTART.md).
 
 LLMs propose. Zerker Reason checks what follows from explicit facts and rules, identifies what is missing, and returns a deterministic proof object an independent checker can verify.
 
