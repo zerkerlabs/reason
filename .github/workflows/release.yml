@@ -16,8 +16,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
+          prerelease=()
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            prerelease+=(--prerelease)
+          fi
           gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
-            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --generate-notes
+            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --generate-notes "${prerelease[@]}"
 
   build:
     name: ${{ matrix.name }}
@@ -29,10 +34,13 @@ jobs:
         include:
           - name: Linux x86_64
             os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
           - name: macOS arm64
             os: macos-14
+            target: aarch64-apple-darwin
           - name: macOS x86_64
-            os: macos-13
+            os: macos-14
+            target: x86_64-apple-darwin
 
     steps:
       - name: Check out source
@@ -42,19 +50,20 @@ jobs:
         run: |
           rustup toolchain install stable --profile minimal
           rustup default stable
+          rustup target add "${{ matrix.target }}"
 
       - name: Build release binary
-        run: cargo build --release --locked --bin reason
+        run: cargo build --release --locked --bin reason --target "${{ matrix.target }}"
 
       - name: Package binary
         id: package
         shell: bash
         run: |
           set -euo pipefail
-          HOST="$(rustc -vV | awk '/^host:/ {print $2}')"
-          ARCHIVE="zerker-reason-${GITHUB_REF_NAME}-${HOST}.tar.gz"
+          TARGET="${{ matrix.target }}"
+          ARCHIVE="zerker-reason-${GITHUB_REF_NAME}-${TARGET}.tar.gz"
           mkdir package
-          cp target/release/reason README.md LICENSE package/
+          cp "target/${TARGET}/release/reason" README.md LICENSE package/
           tar -czf "$ARCHIVE" -C package reason README.md LICENSE
           shasum -a 256 "$ARCHIVE" >"$ARCHIVE.sha256"
           echo "archive=$ARCHIVE" >>"$GITHUB_OUTPUT"

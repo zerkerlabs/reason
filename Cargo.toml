@@ -4,6 +4,13 @@ version = "0.1.0"
 edition = "2024"
 description = "A trustworthy neuro-symbolic reasoning coprocessor for agents"
 license = "Apache-2.0"
+repository = "https://github.com/zerkerlabs/reason"
+homepage = "https://reason.zerker.ai"
+documentation = "https://github.com/zerkerlabs/reason/tree/main/docs"
+readme = "README.md"
+keywords = ["agents", "authorization", "neuro-symbolic", "reasoning", "verification"]
+categories = ["command-line-utilities", "development-tools"]
+exclude = ["website/"]
 
 [[bin]]
 name = "reason"
