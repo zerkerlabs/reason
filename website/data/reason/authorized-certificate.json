@@ -1,0 +1,384 @@
+{
+  "schema": "zerker.reason.authorization.v1",
+  "status": "authorized",
+  "request_digest": "sha256:ffbb682242b1358c0fe0621bf9395bcc020a6398e3d8c2106a92272a3f77c8d5",
+  "mission": {
+    "id": "mission_release_140",
+    "digest": "sha256:bd9f1fee10ccf478aebe3900b9879c835c04f009f8f8b74b4fbef3882ff4a85d"
+  },
+  "action": {
+    "id": "action_deploy_140",
+    "digest": "sha256:3a52b9805697cc29c4eacca2c46f297efcafddd0fb6290aff1cdeaecd9a83cfa",
+    "tool": "deploy_release",
+    "arguments": {
+      "commit": "commit_abc",
+      "environment": "production",
+      "version": "1.4.0"
+    },
+    "effects": [
+      {
+        "kind": "deploy",
+        "resource": "release:1.4.0",
+        "value": "production"
+      }
+    ]
+  },
+  "reasoning": {
+    "schema": "zerker.reason.result.v2",
+    "status": "proved",
+    "query": {
+      "predicate": "action_authorized",
+      "arguments": [
+        "action_deploy_140"
+      ]
+    },
+    "program_digest": "sha256:3239872d0bc462ab10fb5f764eb7f737e7fd9a7bd81eaed1ce0f40695c6cbe3a",
+    "ontology": {
+      "id": "software-release-authorization",
+      "version": "0.1.0",
+      "digest": "sha256:517d7e2aa824a94ad2448867716ba0a9c9fe3f584156ebe2c6ff8af50fd0aa32"
+    },
+    "authority": {
+      "policy_digest": "sha256:1d8f4910513651308852a74cf5722e55b02e82132a6600bed51e4956c1035413",
+      "admitted_fact_ids": [
+        "fact_approval_140",
+        "fact_review_abc",
+        "fact_tests_abc",
+        "zerker.action.binding.action.argument.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+        "zerker.action.binding.action.argument.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+        "zerker.action.binding.action.argument.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+        "zerker.action.binding.action.effect.0000",
+        "zerker.action.binding.action.tool",
+        "zerker.action.binding.mission.action",
+        "zerker.action.binding.mission.active",
+        "zerker.action.binding.mission.constraint.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+        "zerker.action.binding.mission.constraint.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+        "zerker.action.binding.mission.constraint.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+        "zerker.action.binding.mission.instruction",
+        "zerker.action.binding.mission.principal"
+      ],
+      "withheld": []
+    },
+    "temporal": {
+      "evaluation_time": "2026-08-14T12:00:00Z",
+      "eligible_fact_ids": [
+        "fact_approval_140",
+        "fact_review_abc",
+        "fact_tests_abc",
+        "zerker.action.binding.action.argument.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+        "zerker.action.binding.action.argument.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+        "zerker.action.binding.action.argument.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+        "zerker.action.binding.action.effect.0000",
+        "zerker.action.binding.action.tool",
+        "zerker.action.binding.mission.action",
+        "zerker.action.binding.mission.active",
+        "zerker.action.binding.mission.constraint.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+        "zerker.action.binding.mission.constraint.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+        "zerker.action.binding.mission.constraint.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+        "zerker.action.binding.mission.instruction",
+        "zerker.action.binding.mission.principal"
+      ],
+      "withheld": []
+    },
+    "proof": {
+      "root": "node_32037204f9b4cfcf4677b748f35904e5739d4a192138c75bee7b58ff35232c78",
+      "nodes": [
+        {
+          "id": "node_03da833ac0c7901f668d346bed2f605441648e79b7ef0e2f15c1d8b487505e2b",
+          "kind": "fact",
+          "atom": {
+            "predicate": "approved",
+            "arguments": [
+              "1.4.0",
+              "release-manager"
+            ]
+          },
+          "source_id": "fact_approval_140",
+          "authority": "human-authorized",
+          "temporal": {
+            "observed_at": "2026-08-14T11:10:00Z",
+            "valid_until": "2026-08-14T16:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_06a0886eee87a5a3e11ba6bf7518f2379215d7f85af6647fa8066dc356d2f3c9",
+          "kind": "fact",
+          "atom": {
+            "predicate": "action_argument",
+            "arguments": [
+              "action_deploy_140",
+              "commit",
+              "commit_abc"
+            ]
+          },
+          "source_id": "zerker.action.binding.action.argument.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+          "authority": "system-bound",
+          "temporal": {
+            "observed_at": "2026-08-14T12:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_14f2a285c1d3e0da49762bbc0a7a22d570b6751d6bc74175013efb488cd2acbb",
+          "kind": "fact",
+          "atom": {
+            "predicate": "action_argument",
+            "arguments": [
+              "action_deploy_140",
+              "version",
+              "1.4.0"
+            ]
+          },
+          "source_id": "zerker.action.binding.action.argument.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+          "authority": "system-bound",
+          "temporal": {
+            "observed_at": "2026-08-14T12:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_184f98d6e6a6992fa180287549a0945dad1d32df9221e8e3d5b88183e0320585",
+          "kind": "fact",
+          "atom": {
+            "predicate": "mission_principal",
+            "arguments": [
+              "mission_release_140",
+              "user:release-owner"
+            ]
+          },
+          "source_id": "zerker.action.binding.mission.principal",
+          "authority": "system-bound",
+          "temporal": {
+            "observed_at": "2026-08-14T10:00:00Z",
+            "valid_until": "2026-08-14T18:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_32037204f9b4cfcf4677b748f35904e5739d4a192138c75bee7b58ff35232c78",
+          "kind": "derivation",
+          "atom": {
+            "predicate": "action_authorized",
+            "arguments": [
+              "action_deploy_140"
+            ]
+          },
+          "source_id": "rule_authorize_production_deploy",
+          "premises": [
+            "node_9d35e6abeb868e84a09160d3c84a9a25088c7f6ce155bde635dbbba6a84c0f45",
+            "node_e65c02755142f8b770e92669e316706b43b4f3ed89513b26ba5ecfccd6fa4a09",
+            "node_184f98d6e6a6992fa180287549a0945dad1d32df9221e8e3d5b88183e0320585",
+            "node_7f518fe0411938593356195cc60aa1505f0c2a28a12fc44e80b3626cf34f6384",
+            "node_697d0c2477cdec1e829650f5e41dafb58ad28c8466debc03ad4443d6fe156e8c",
+            "node_56c8e0df11505ed5535ef6534a3e87383970510b9ebe15884ca013e6138bf30f",
+            "node_e1523645a57917077eb89c5cdfbcfa9dbc2d8f6d9c1dee8aaa03e1a831e82fd3",
+            "node_ca5c1fde1a356b5ccda5ff1f8d6cca6c45c26c7a5f8f0ce4cad92ee4e9958343",
+            "node_14f2a285c1d3e0da49762bbc0a7a22d570b6751d6bc74175013efb488cd2acbb",
+            "node_06a0886eee87a5a3e11ba6bf7518f2379215d7f85af6647fa8066dc356d2f3c9",
+            "node_81a10d6a66265891003f79b1ff10f9fdca46931b61bf7494674429b6e70f1170",
+            "node_7d463ac802872d592a9a6018358e019661851af1bb423afc78ea630330b16e20",
+            "node_ffb9b917417c256b230dd6c610a226fb755b395f2ef99d513ea242e4ecd74b7e",
+            "node_03da833ac0c7901f668d346bed2f605441648e79b7ef0e2f15c1d8b487505e2b"
+          ]
+        },
+        {
+          "id": "node_56c8e0df11505ed5535ef6534a3e87383970510b9ebe15884ca013e6138bf30f",
+          "kind": "fact",
+          "atom": {
+            "predicate": "mission_constraint",
+            "arguments": [
+              "mission_release_140",
+              "commit",
+              "commit_abc"
+            ]
+          },
+          "source_id": "zerker.action.binding.mission.constraint.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+          "authority": "system-bound",
+          "temporal": {
+            "observed_at": "2026-08-14T10:00:00Z",
+            "valid_until": "2026-08-14T18:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_697d0c2477cdec1e829650f5e41dafb58ad28c8466debc03ad4443d6fe156e8c",
+          "kind": "fact",
+          "atom": {
+            "predicate": "mission_constraint",
+            "arguments": [
+              "mission_release_140",
+              "version",
+              "1.4.0"
+            ]
+          },
+          "source_id": "zerker.action.binding.mission.constraint.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+          "authority": "system-bound",
+          "temporal": {
+            "observed_at": "2026-08-14T10:00:00Z",
+            "valid_until": "2026-08-14T18:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_7d463ac802872d592a9a6018358e019661851af1bb423afc78ea630330b16e20",
+          "kind": "fact",
+          "atom": {
+            "predicate": "tests_passed",
+            "arguments": [
+              "commit_abc"
+            ]
+          },
+          "source_id": "fact_tests_abc",
+          "authority": "tool-reported",
+          "temporal": {
+            "observed_at": "2026-08-14T11:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_7f518fe0411938593356195cc60aa1505f0c2a28a12fc44e80b3626cf34f6384",
+          "kind": "fact",
+          "atom": {
+            "predicate": "mission_constraint",
+            "arguments": [
+              "mission_release_140",
+              "environment",
+              "production"
+            ]
+          },
+          "source_id": "zerker.action.binding.mission.constraint.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+          "authority": "system-bound",
+          "temporal": {
+            "observed_at": "2026-08-14T10:00:00Z",
+            "valid_until": "2026-08-14T18:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_81a10d6a66265891003f79b1ff10f9fdca46931b61bf7494674429b6e70f1170",
+          "kind": "fact",
+          "atom": {
+            "predicate": "action_effect",
+            "arguments": [
+              "action_deploy_140",
+              "deploy",
+              "release:1.4.0",
+              "production"
+            ]
+          },
+          "source_id": "zerker.action.binding.action.effect.0000",
+          "authority": "system-bound",
+          "temporal": {
+            "observed_at": "2026-08-14T12:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_9d35e6abeb868e84a09160d3c84a9a25088c7f6ce155bde635dbbba6a84c0f45",
+          "kind": "fact",
+          "atom": {
+            "predicate": "mission_active",
+            "arguments": [
+              "mission_release_140"
+            ]
+          },
+          "source_id": "zerker.action.binding.mission.active",
+          "authority": "system-bound",
+          "temporal": {
+            "observed_at": "2026-08-14T10:00:00Z",
+            "valid_until": "2026-08-14T18:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_ca5c1fde1a356b5ccda5ff1f8d6cca6c45c26c7a5f8f0ce4cad92ee4e9958343",
+          "kind": "fact",
+          "atom": {
+            "predicate": "action_argument",
+            "arguments": [
+              "action_deploy_140",
+              "environment",
+              "production"
+            ]
+          },
+          "source_id": "zerker.action.binding.action.argument.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+          "authority": "system-bound",
+          "temporal": {
+            "observed_at": "2026-08-14T12:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_e1523645a57917077eb89c5cdfbcfa9dbc2d8f6d9c1dee8aaa03e1a831e82fd3",
+          "kind": "fact",
+          "atom": {
+            "predicate": "action_tool",
+            "arguments": [
+              "action_deploy_140",
+              "deploy_release"
+            ]
+          },
+          "source_id": "zerker.action.binding.action.tool",
+          "authority": "system-bound",
+          "temporal": {
+            "observed_at": "2026-08-14T12:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_e65c02755142f8b770e92669e316706b43b4f3ed89513b26ba5ecfccd6fa4a09",
+          "kind": "fact",
+          "atom": {
+            "predicate": "mission_action",
+            "arguments": [
+              "mission_release_140",
+              "action_deploy_140"
+            ]
+          },
+          "source_id": "zerker.action.binding.mission.action",
+          "authority": "system-bound",
+          "temporal": {
+            "observed_at": "2026-08-14T12:00:00Z",
+            "valid_until": "2026-08-14T18:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_ffb9b917417c256b230dd6c610a226fb755b395f2ef99d513ea242e4ecd74b7e",
+          "kind": "fact",
+          "atom": {
+            "predicate": "security_reviewed",
+            "arguments": [
+              "commit_abc"
+            ]
+          },
+          "source_id": "fact_review_abc",
+          "authority": "human-authorized",
+          "temporal": {
+            "observed_at": "2026-08-14T11:05:00Z"
+          },
+          "premises": []
+        }
+      ],
+      "digest": "sha256:ba4bd960b8034352048ab39db85b1f1db8b6ca96290562300f113efae0cc6eaf"
+    },
+    "disproof": null,
+    "conflict": null,
+    "missing": [],
+    "assumptions": [
+      "Only facts admitted by the explicit authority policy participate in inference.",
+      "Explicit negation does not use absence as evidence of falsity.",
+      "Contradictory support is preserved as inconsistent instead of resolved silently."
+    ],
+    "metrics": {
+      "facts_supplied": 15,
+      "facts_admitted": 15,
+      "facts_withheld": 0,
+      "facts_derived": 1,
+      "rules_evaluated": 6,
+      "rounds": 2
+    }
+  },
+  "issues": []
+}

@@ -1,0 +1,198 @@
+{
+  "schema": "zerker.reason.authorization.v1",
+  "status": "denied",
+  "request_digest": "sha256:97d8cd39f4c99c3283a03885e5a5084397d008f77e91c52c2ec95fd7f7eac065",
+  "mission": {
+    "id": "mission_release_140",
+    "digest": "sha256:bd9f1fee10ccf478aebe3900b9879c835c04f009f8f8b74b4fbef3882ff4a85d"
+  },
+  "action": {
+    "id": "action_deploy_denied",
+    "digest": "sha256:49aac94a837a556785ab6824a6e9c4c77cfa8cc34df48496303ddd8f96c31bea",
+    "tool": "deploy_release",
+    "arguments": {
+      "commit": "commit_abc",
+      "environment": "production",
+      "version": "1.4.0"
+    },
+    "effects": [
+      {
+        "kind": "deploy",
+        "resource": "release:1.4.0",
+        "value": "production"
+      }
+    ]
+  },
+  "reasoning": {
+    "schema": "zerker.reason.result.v2",
+    "status": "disproved",
+    "query": {
+      "predicate": "action_authorized",
+      "arguments": [
+        "action_deploy_denied"
+      ]
+    },
+    "program_digest": "sha256:119dbbf69c84f941b902389338dbf9abdbc48e7dfaa2c04bcdd1f81a8eb3398d",
+    "ontology": {
+      "id": "software-release-authorization",
+      "version": "0.1.0",
+      "digest": "sha256:517d7e2aa824a94ad2448867716ba0a9c9fe3f584156ebe2c6ff8af50fd0aa32"
+    },
+    "authority": {
+      "policy_digest": "sha256:1d8f4910513651308852a74cf5722e55b02e82132a6600bed51e4956c1035413",
+      "admitted_fact_ids": [
+        "fact_rejection_140",
+        "fact_review_abc",
+        "fact_tests_abc",
+        "zerker.action.binding.action.argument.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+        "zerker.action.binding.action.argument.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+        "zerker.action.binding.action.argument.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+        "zerker.action.binding.action.effect.0000",
+        "zerker.action.binding.action.tool",
+        "zerker.action.binding.mission.action",
+        "zerker.action.binding.mission.active",
+        "zerker.action.binding.mission.constraint.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+        "zerker.action.binding.mission.constraint.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+        "zerker.action.binding.mission.constraint.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+        "zerker.action.binding.mission.instruction",
+        "zerker.action.binding.mission.principal"
+      ],
+      "withheld": []
+    },
+    "temporal": {
+      "evaluation_time": "2026-08-14T12:00:00Z",
+      "eligible_fact_ids": [
+        "fact_rejection_140",
+        "fact_review_abc",
+        "fact_tests_abc",
+        "zerker.action.binding.action.argument.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+        "zerker.action.binding.action.argument.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+        "zerker.action.binding.action.argument.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+        "zerker.action.binding.action.effect.0000",
+        "zerker.action.binding.action.tool",
+        "zerker.action.binding.mission.action",
+        "zerker.action.binding.mission.active",
+        "zerker.action.binding.mission.constraint.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+        "zerker.action.binding.mission.constraint.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+        "zerker.action.binding.mission.constraint.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+        "zerker.action.binding.mission.instruction",
+        "zerker.action.binding.mission.principal"
+      ],
+      "withheld": []
+    },
+    "proof": null,
+    "disproof": {
+      "root": "node_24e4a2b33930f39ef382904070a10a0cbde06ca7604554bf49c1f27eb8ec687a",
+      "nodes": [
+        {
+          "id": "node_1649a21e0c1601e9e5b0306fa86f8019c535f444f22f9b592f3338febecdeb7c",
+          "kind": "fact",
+          "atom": {
+            "predicate": "approved",
+            "arguments": [
+              "1.4.0",
+              "release-manager"
+            ],
+            "negated": true
+          },
+          "source_id": "fact_rejection_140",
+          "authority": "human-authorized",
+          "temporal": {
+            "observed_at": "2026-08-14T11:10:00Z",
+            "valid_until": "2026-08-14T16:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_24e4a2b33930f39ef382904070a10a0cbde06ca7604554bf49c1f27eb8ec687a",
+          "kind": "derivation",
+          "atom": {
+            "predicate": "action_authorized",
+            "arguments": [
+              "action_deploy_denied"
+            ],
+            "negated": true
+          },
+          "source_id": "rule_deny_rejected_release",
+          "premises": [
+            "node_2ff5d991b5c2b18c8ddc873886013a31b23470503f8a9c8cd56871b84e92db3d",
+            "node_88fbea72878662056d6b075be774fafa9abed0b767d542bd86c243a9dfe050f8",
+            "node_1649a21e0c1601e9e5b0306fa86f8019c535f444f22f9b592f3338febecdeb7c"
+          ]
+        },
+        {
+          "id": "node_2ff5d991b5c2b18c8ddc873886013a31b23470503f8a9c8cd56871b84e92db3d",
+          "kind": "fact",
+          "atom": {
+            "predicate": "action_tool",
+            "arguments": [
+              "action_deploy_denied",
+              "deploy_release"
+            ]
+          },
+          "source_id": "zerker.action.binding.action.tool",
+          "authority": "system-bound",
+          "temporal": {
+            "observed_at": "2026-08-14T12:00:00Z"
+          },
+          "premises": []
+        },
+        {
+          "id": "node_88fbea72878662056d6b075be774fafa9abed0b767d542bd86c243a9dfe050f8",
+          "kind": "fact",
+          "atom": {
+            "predicate": "action_argument",
+            "arguments": [
+              "action_deploy_denied",
+              "version",
+              "1.4.0"
+            ]
+          },
+          "source_id": "zerker.action.binding.action.argument.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+          "authority": "system-bound",
+          "temporal": {
+            "observed_at": "2026-08-14T12:00:00Z"
+          },
+          "premises": []
+        }
+      ],
+      "digest": "sha256:811eb55f5e09df5f78fd2589a4e21a96792a0f5ad70df1e6e30bd1b8cf46d71c"
+    },
+    "conflict": null,
+    "missing": [
+      {
+        "predicate": "approved",
+        "arguments": [
+          "1.4.0",
+          "release-manager"
+        ]
+      }
+    ],
+    "assumptions": [
+      "Only facts admitted by the explicit authority policy participate in inference.",
+      "Explicit negation does not use absence as evidence of falsity.",
+      "Contradictory support is preserved as inconsistent instead of resolved silently."
+    ],
+    "metrics": {
+      "facts_supplied": 15,
+      "facts_admitted": 15,
+      "facts_withheld": 0,
+      "facts_derived": 1,
+      "rules_evaluated": 6,
+      "rounds": 2
+    }
+  },
+  "issues": [
+    {
+      "code": "explicit_denial",
+      "message": "The policy derives explicit denial for this exact action.",
+      "atom": {
+        "predicate": "action_authorized",
+        "arguments": [
+          "action_deploy_denied"
+        ],
+        "negated": true
+      }
+    }
+  ]
+}

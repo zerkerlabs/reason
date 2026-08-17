@@ -1,0 +1,7 @@
+{
+  "schema": "zerker.reason.authorization-verification.v1",
+  "status": "verified",
+  "authorization_status": "conflicted",
+  "request_digest": "sha256:f9c824c4c9ccbcbede26d4ec286a120635be850948050305b8d8a2368b23f326",
+  "reasoning_result_digest": "sha256:7000490b83baa671954aaa2ae8bb0519165888aa16b1154dd80ecfd977bf2cad"
+}
