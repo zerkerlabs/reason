@@ -1,0 +1,120 @@
+{
+  "schema": "zerker.reason.authorization.v1",
+  "status": "insufficient_evidence",
+  "request_digest": "sha256:1bb82295919a1832ad3856371987b366cb3c6aa4004f553d95177073f095c5d6",
+  "mission": {
+    "id": "mission_release_140",
+    "digest": "sha256:bd9f1fee10ccf478aebe3900b9879c835c04f009f8f8b74b4fbef3882ff4a85d"
+  },
+  "action": {
+    "id": "action_deploy_unknown",
+    "digest": "sha256:6d91ddb800b1697a29daaa42c59c76ece018a2b52831b44579c834a513a0030d",
+    "tool": "deploy_release",
+    "arguments": {
+      "commit": "commit_abc",
+      "environment": "production",
+      "version": "1.4.0"
+    },
+    "effects": [
+      {
+        "kind": "deploy",
+        "resource": "release:1.4.0",
+        "value": "production"
+      }
+    ]
+  },
+  "reasoning": {
+    "schema": "zerker.reason.result.v2",
+    "status": "unknown",
+    "query": {
+      "predicate": "action_authorized",
+      "arguments": [
+        "action_deploy_unknown"
+      ]
+    },
+    "program_digest": "sha256:88322518e591fe222ef8b3f2ec65a1d9574d75158c5cabcc89de5dea41e137d3",
+    "ontology": {
+      "id": "software-release-authorization",
+      "version": "0.1.0",
+      "digest": "sha256:517d7e2aa824a94ad2448867716ba0a9c9fe3f584156ebe2c6ff8af50fd0aa32"
+    },
+    "authority": {
+      "policy_digest": "sha256:1d8f4910513651308852a74cf5722e55b02e82132a6600bed51e4956c1035413",
+      "admitted_fact_ids": [
+        "fact_review_abc",
+        "fact_tests_abc",
+        "zerker.action.binding.action.argument.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+        "zerker.action.binding.action.argument.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+        "zerker.action.binding.action.argument.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+        "zerker.action.binding.action.effect.0000",
+        "zerker.action.binding.action.tool",
+        "zerker.action.binding.mission.action",
+        "zerker.action.binding.mission.active",
+        "zerker.action.binding.mission.constraint.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+        "zerker.action.binding.mission.constraint.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+        "zerker.action.binding.mission.constraint.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+        "zerker.action.binding.mission.instruction",
+        "zerker.action.binding.mission.principal"
+      ],
+      "withheld": []
+    },
+    "temporal": {
+      "evaluation_time": "2026-08-14T12:00:00Z",
+      "eligible_fact_ids": [
+        "fact_review_abc",
+        "fact_tests_abc",
+        "zerker.action.binding.action.argument.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+        "zerker.action.binding.action.argument.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+        "zerker.action.binding.action.argument.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+        "zerker.action.binding.action.effect.0000",
+        "zerker.action.binding.action.tool",
+        "zerker.action.binding.mission.action",
+        "zerker.action.binding.mission.active",
+        "zerker.action.binding.mission.constraint.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+        "zerker.action.binding.mission.constraint.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+        "zerker.action.binding.mission.constraint.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+        "zerker.action.binding.mission.instruction",
+        "zerker.action.binding.mission.principal"
+      ],
+      "withheld": []
+    },
+    "proof": null,
+    "disproof": null,
+    "conflict": null,
+    "missing": [
+      {
+        "predicate": "approved",
+        "arguments": [
+          "1.4.0",
+          "release-manager"
+        ]
+      }
+    ],
+    "assumptions": [
+      "Only facts admitted by the explicit authority policy participate in inference.",
+      "Explicit negation does not use absence as evidence of falsity.",
+      "Contradictory support is preserved as inconsistent instead of resolved silently."
+    ],
+    "metrics": {
+      "facts_supplied": 14,
+      "facts_admitted": 14,
+      "facts_withheld": 0,
+      "facts_derived": 0,
+      "rules_evaluated": 3,
+      "rounds": 1
+    }
+  },
+  "issues": [
+    {
+      "code": "missing_requirement",
+      "message": "A required premise is not currently derivable.",
+      "atom": {
+        "predicate": "approved",
+        "arguments": [
+          "1.4.0",
+          "release-manager"
+        ]
+      }
+    }
+  ]
+}

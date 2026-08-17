@@ -1,0 +1,46 @@
+{
+  "schema": "zerker.demo.reason-fixtures.v1",
+  "generator": "reason 0.1.0",
+  "scenarios": {
+    "authorized": {
+      "status": "authorized",
+      "authorize_exit": 0,
+      "request_digest": "sha256:ffbb682242b1358c0fe0621bf9395bcc020a6398e3d8c2106a92272a3f77c8d5",
+      "artifacts": {
+        "request": "sha256:09b470157af921692a0e3d00da154b4c57af27f0e839e6eb5f3c6b909edd992e",
+        "certificate": "sha256:f888cd5c2c25812bfe260385847d95ceaa1a4b43d4a22f15745dd15a18bc32ca",
+        "verification": "sha256:e998954def5d06a7ce59555d4cd30f643937ebcb0b66a54b75b5c08c1ebeaa5d"
+      }
+    },
+    "unknown": {
+      "status": "insufficient_evidence",
+      "authorize_exit": 2,
+      "request_digest": "sha256:1bb82295919a1832ad3856371987b366cb3c6aa4004f553d95177073f095c5d6",
+      "artifacts": {
+        "request": "sha256:4c8f06e3d5560fef2695d9ae7761abcf496003ff5d12c51063613ff5a665d801",
+        "certificate": "sha256:f1c18e7d53eddaeb405e77cee883761f2e341d92999d98b5c06ff7163b5ac54a",
+        "verification": "sha256:12fdd73e06e57b614bf91d7f6d67d4ecaff27fa48f66954443b9439401fc07ea"
+      }
+    },
+    "denied": {
+      "status": "denied",
+      "authorize_exit": 3,
+      "request_digest": "sha256:97d8cd39f4c99c3283a03885e5a5084397d008f77e91c52c2ec95fd7f7eac065",
+      "artifacts": {
+        "request": "sha256:c3f793de877e69b002c91872ead79e55b6dbbfd17f439e80dc347dc92967387f",
+        "certificate": "sha256:c1bc1ce123db8a095f8bd7976529456a3d5baf44dd02ceb162323dc99f780e66",
+        "verification": "sha256:2f977a81583c29f19193403b6b034d65691f6988251d122c86b1533ede73df44"
+      }
+    },
+    "conflict": {
+      "status": "conflicted",
+      "authorize_exit": 4,
+      "request_digest": "sha256:f9c824c4c9ccbcbede26d4ec286a120635be850948050305b8d8a2368b23f326",
+      "artifacts": {
+        "request": "sha256:2d88494755755ea7a917129ece1459577cbba259f8f8d0e467c26f93cc541c7c",
+        "certificate": "sha256:444e915ab897a212138aa9a47e41cdcd0adb28cb77375ce351087bb98feb5d44",
+        "verification": "sha256:3b21d25ab8365f639d7829c446c457d5813d441b26ffc4f70577e943afe953bd"
+      }
+    }
+  }
+}

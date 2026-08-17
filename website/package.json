@@ -1,0 +1,9 @@
+{
+  "name": "zerker-reason-site",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs",
+    "generate-demo": "node scripts/generate-reason-demo.mjs",
+    "check": "npm run build && node scripts/check-reason-demo.mjs"
+  }
+}

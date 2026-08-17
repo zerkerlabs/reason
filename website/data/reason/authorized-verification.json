@@ -1,0 +1,7 @@
+{
+  "schema": "zerker.reason.authorization-verification.v1",
+  "status": "verified",
+  "authorization_status": "authorized",
+  "request_digest": "sha256:ffbb682242b1358c0fe0621bf9395bcc020a6398e3d8c2106a92272a3f77c8d5",
+  "reasoning_result_digest": "sha256:2f721e7e82f1181fde0c1cda96adeb88379db1bc7b09e0c0fe012eef2d7e0bf6"
+}

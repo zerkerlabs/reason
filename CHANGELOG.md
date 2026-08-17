@@ -1,0 +1,15 @@
+# Changelog
+
+## [0.1.0] - 2026-08-17
+
+### Added
+
+- Derive deterministic proof DAGs from typed facts and Horn rules, then verify them independently.
+- Preserve proved, disproved, inconsistent, and unknown outcomes without treating missing evidence as false.
+- Enforce authority policies, explicit negation, temporal validity, and authority-aware supersession.
+- Authorize exact agent actions bound to missions, tools, arguments, effects, policy, evidence, and evaluation time.
+- Verify authorization certificates independently and fail closed on missing, denied, stale, or conflicting evidence.
+- Preserve verified authorization certificates in Treeship receipts with exact certificate-file digest binding.
+- Exercise release-safety behavior with authorized, insufficient-evidence, denied, conflicted, stale, superseded, and wrong-commit fixtures.
+- Run the certificate-backed product demo as a standalone website with four independently replayable outcomes.
+- Build and test on macOS and Linux, with tagged release archives and SHA-256 checksums.

@@ -2,6 +2,8 @@
 
 A trustworthy neuro-symbolic reasoning coprocessor for agents.
 
+> **Developer preview:** explore the [live certificate demo](https://reason.zerker.ai) or start with the [deployment quickstart](docs/QUICKSTART.md).
+
 LLMs propose. Zerker Reason checks what follows from explicit facts and rules, identifies what is missing, and returns a deterministic proof object an independent checker can verify.
 
 ## First useful workflow
@@ -175,4 +177,4 @@ Zerker Reason is an independent reasoning service:
 - **Guard** enforces actions after reasoning.
 - **Treeship** records premise, ruleset, result, and proof commitments.
 
-See [`docs/PRODUCT.md`](docs/PRODUCT.md), [`docs/EXPERIENCE.md`](docs/EXPERIENCE.md), [`docs/AUTHORITY.md`](docs/AUTHORITY.md), [`docs/TRUTH.md`](docs/TRUTH.md), [`docs/TEMPORAL.md`](docs/TEMPORAL.md), [`docs/ACTIONS.md`](docs/ACTIONS.md), [`docs/PROOFS.md`](docs/PROOFS.md), and [`docs/TREESHIP.md`](docs/TREESHIP.md).
+See [`docs/QUICKSTART.md`](docs/QUICKSTART.md), [`docs/PRODUCT.md`](docs/PRODUCT.md), [`docs/EXPERIENCE.md`](docs/EXPERIENCE.md), [`docs/AUTHORITY.md`](docs/AUTHORITY.md), [`docs/TRUTH.md`](docs/TRUTH.md), [`docs/TEMPORAL.md`](docs/TEMPORAL.md), [`docs/ACTIONS.md`](docs/ACTIONS.md), [`docs/PROOFS.md`](docs/PROOFS.md), and [`docs/TREESHIP.md`](docs/TREESHIP.md).

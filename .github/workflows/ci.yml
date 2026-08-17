@@ -33,3 +33,9 @@ jobs:
 
       - name: Run tests
         run: cargo test --all-targets --all-features
+
+      - name: Build demo binary
+        run: cargo build --locked --bin reason
+
+      - name: Check certificate-backed website
+        run: npm --prefix website run check
