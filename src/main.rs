@@ -219,14 +219,26 @@ fn load<T: DeserializeOwned>(path: &PathBuf) -> Result<T, Box<dyn std::error::Er
 }
 
 /// Parse through an untyped tree first so duplicate object members are rejected
-/// recursively, including inside user-defined maps. Serde's derived structs
-/// reject duplicate named fields, but map fields otherwise use last-value-wins,
-/// which makes exact authorization bytes ambiguous across JSON consumers.
+/// recursively, including inside user-defined maps. Then reject every member
+/// the selected versioned schema does not consume. Otherwise one component can
+/// act on a field that Reason silently ignored when authorizing the request.
 fn parse_unique_json<T: DeserializeOwned>(text: &str) -> Result<T, serde_json::Error> {
     let mut deserializer = serde_json::Deserializer::from_str(text);
     let value = UniqueJsonValue::deserialize(&mut deserializer)?.0;
     deserializer.end()?;
-    serde_json::from_value(value)
+
+    let mut ignored = None;
+    let parsed = serde_ignored::deserialize(value, |path| {
+        if ignored.is_none() {
+            ignored = Some(path.to_string());
+        }
+    })?;
+    match ignored {
+        None => Ok(parsed),
+        Some(path) => Err(de::Error::custom(format!(
+            "unknown object member at {path}"
+        ))),
+    }
 }
 
 struct UniqueJsonValue(serde_json::Value);
@@ -613,6 +625,34 @@ mod tests {
                 .to_string()
                 .contains("duplicate object member `effect`")
         );
+    }
+
+    #[test]
+    fn unique_json_parser_rejects_unknown_members_at_any_depth() {
+        #[allow(dead_code)]
+        #[derive(serde::Deserialize)]
+        struct Envelope {
+            request: Request,
+        }
+
+        #[allow(dead_code)]
+        #[derive(serde::Deserialize)]
+        struct Request {
+            action: Action,
+        }
+
+        #[allow(dead_code)]
+        #[derive(serde::Deserialize)]
+        struct Action {
+            tool: String,
+        }
+
+        let error = parse_unique_json::<Envelope>(
+            r#"{"request":{"action":{"tool":"deploy","execution_mode":"bypass"}}}"#,
+        )
+        .err()
+        .expect("unknown member must fail closed");
+        assert!(error.to_string().contains("execution_mode"));
     }
 
     #[test]

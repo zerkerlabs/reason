@@ -335,6 +335,62 @@ fn authorization_bundle_rejects_duplicate_members_before_verification() {
 }
 
 #[test]
+fn authorization_bundle_rejects_unknown_action_members_before_verification() {
+    let mut request: serde_json::Value =
+        serde_json::from_slice(&std::fs::read("examples/authorize-deploy.json").unwrap()).unwrap();
+    request["action"]["unrecognized_execution_mode"] = serde_json::json!("bypass");
+
+    let mut authorize = Command::cargo_bin("reason").unwrap();
+    let output = authorize
+        .args([
+            "--format",
+            "json",
+            "authorize",
+            "examples/authorize-deploy.json",
+        ])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let certificate: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let bundle = serde_json::json!({
+        "schema": "zerker.reason.authorization-bundle.v1",
+        "request": request,
+        "certificate": certificate,
+    });
+
+    let mut verify = Command::cargo_bin("reason").unwrap();
+    verify
+        .args([
+            "--format",
+            "json",
+            "verify-authorization-bundle",
+            "-",
+            "--require-authorized",
+        ])
+        .write_stdin(serde_json::to_vec(&bundle).unwrap())
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains("unrecognized_execution_mode"))
+        .stdout(predicate::str::contains("unknown object member"));
+}
+
+#[test]
+fn authorization_request_rejects_unknown_flattened_fact_members() {
+    let mut request: serde_json::Value =
+        serde_json::from_slice(&std::fs::read("examples/authorize-deploy.json").unwrap()).unwrap();
+    request["policy"]["facts"][0]["unrecognized_trust_override"] = serde_json::json!(true);
+
+    let mut authorize = Command::cargo_bin("reason").unwrap();
+    authorize
+        .args(["--format", "json", "authorize", "-"])
+        .write_stdin(serde_json::to_vec(&request).unwrap())
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains("unrecognized_trust_override"))
+        .stdout(predicate::str::contains("unknown field"));
+}
+
+#[test]
 fn authorization_bundle_rejects_an_unknown_schema() {
     let request: serde_json::Value =
         serde_json::from_slice(&std::fs::read("examples/authorize-deploy.json").unwrap()).unwrap();

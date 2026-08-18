@@ -11,6 +11,7 @@
 
 - Cap every CLI JSON input at 64 MiB.
 - Reject duplicate JSON object members recursively instead of accepting last-value-wins map entries.
+- Reject unrecognized members in versioned CLI JSON schemas instead of silently discarding unsigned semantics.
 
 ## [0.1.0] - 2026-08-17
 

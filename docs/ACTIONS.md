@@ -163,7 +163,7 @@ cat bundle.json | reason --format json \
 
 Without `--require-authorized`, a semantically valid denial, conflict, or insufficient-evidence certificate exits successfully because the certificate verified. With the flag, verification still produces `status: "verified"`, but the process returns the authorization status exit code: 0 only for `authorized`, 2 for `insufficient_evidence`, 3 for `denied`, and 4 for `conflicted`. Verifier errors return 1.
 
-Reason caps every JSON input, including standard input, at 64 MiB. Integrations should set a smaller deployment-specific limit and a subprocess timeout rather than relying on the CLI cap alone.
+Reason caps every JSON input, including standard input, at 64 MiB. It also rejects duplicate object members and fields outside the selected versioned schema at every typed depth; keys inside declared maps such as `action.arguments` and `mission.constraints` remain application-defined. Integrations should set a smaller deployment-specific limit and a subprocess timeout rather than relying on the CLI cap alone.
 
 This bundle proves that the certificate matches the bundled request. An enforcement point must also reconstruct the concrete call it is about to execute and compare its tool and normalized arguments with `request.action`. A verified certificate must never authorize a different call.
 
