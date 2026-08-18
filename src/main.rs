@@ -1,7 +1,8 @@
 use std::{
-    fs,
-    io::{self, Read},
-    path::PathBuf,
+    collections::BTreeSet,
+    fs::{self, OpenOptions},
+    io::{self, Read, Write},
+    path::{Path, PathBuf},
     process::ExitCode,
 };
 
@@ -314,22 +315,22 @@ fn run_release(
             let release: ReleaseAuthorizationInput = load(input)?;
             let request = compile_release_authorization(&release)?;
             let result = authorize(&request)?;
+            let bundle = AuthorizationBundle {
+                schema: AUTHORIZATION_BUNDLE_SCHEMA.to_owned(),
+                request: request.clone(),
+                certificate: result.clone(),
+            };
+            let mut outputs = Vec::new();
             if let Some(path) = request_out {
-                write_pretty_json(path, &request)?;
+                outputs.push((path.clone(), pretty_json_bytes(&request)?));
             }
             if let Some(path) = certificate_out {
-                write_pretty_json(path, &result)?;
+                outputs.push((path.clone(), pretty_json_bytes(&result)?));
             }
             if let Some(path) = bundle_out {
-                write_pretty_json(
-                    path,
-                    &AuthorizationBundle {
-                        schema: AUTHORIZATION_BUNDLE_SCHEMA.to_owned(),
-                        request: request.clone(),
-                        certificate: result.clone(),
-                    },
-                )?;
+                outputs.push((path.clone(), pretty_json_bytes(&bundle)?));
             }
+            write_output_set(outputs)?;
             match format {
                 OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&result)?),
                 OutputFormat::Text => {
@@ -358,8 +359,88 @@ fn write_pretty_json(
     path: &PathBuf,
     value: &impl serde::Serialize,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    fs::write(path, format!("{}\n", serde_json::to_string_pretty(value)?))?;
+    fs::write(path, pretty_json_bytes(value)?)?;
     Ok(())
+}
+
+fn pretty_json_bytes(value: &impl serde::Serialize) -> Result<Vec<u8>, serde_json::Error> {
+    let mut bytes = serde_json::to_vec_pretty(value)?;
+    bytes.push(b'\n');
+    Ok(bytes)
+}
+
+/// Stage every release artifact before publishing any of them. Hard links make
+/// each destination a create-if-absent operation, so aliases and partial writes
+/// cannot silently replace a different artifact.
+fn write_output_set(outputs: Vec<(PathBuf, Vec<u8>)>) -> Result<(), Box<dyn std::error::Error>> {
+    let mut identities = BTreeSet::new();
+    for (path, _) in &outputs {
+        let identity = output_identity(path)?;
+        if !identities.insert(identity) {
+            return Err(format!("duplicate release output path: {}", path.display()).into());
+        }
+        if path.exists() {
+            return Err(format!("release output already exists: {}", path.display()).into());
+        }
+    }
+
+    let mut staged = Vec::new();
+    for (index, (path, bytes)) in outputs.iter().enumerate() {
+        let parent = path
+            .parent()
+            .filter(|value| !value.as_os_str().is_empty())
+            .unwrap_or(Path::new("."));
+        let name = path
+            .file_name()
+            .ok_or_else(|| format!("release output has no file name: {}", path.display()))?;
+        let temporary = parent.join(format!(
+            ".{}.reason-stage-{}-{index}",
+            name.to_string_lossy(),
+            std::process::id()
+        ));
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temporary)?;
+        if let Err(error) = file.write_all(bytes).and_then(|()| file.sync_all()) {
+            let _ = fs::remove_file(&temporary);
+            for (staged_path, _) in &staged {
+                let _ = fs::remove_file(staged_path);
+            }
+            return Err(error.into());
+        }
+        staged.push((temporary, path.clone()));
+    }
+
+    let mut published = Vec::new();
+    for (temporary, destination) in &staged {
+        if let Err(error) = fs::hard_link(temporary, destination) {
+            for path in &published {
+                let _ = fs::remove_file(path);
+            }
+            for (staged_path, _) in &staged {
+                let _ = fs::remove_file(staged_path);
+            }
+            return Err(error.into());
+        }
+        published.push(destination.clone());
+    }
+    for (temporary, _) in staged {
+        fs::remove_file(temporary)?;
+    }
+    Ok(())
+}
+
+fn output_identity(path: &Path) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let parent = path
+        .parent()
+        .filter(|value| !value.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let canonical_parent = fs::canonicalize(parent)?;
+    let name = path
+        .file_name()
+        .ok_or_else(|| format!("release output has no file name: {}", path.display()))?;
+    Ok(canonical_parent.join(name))
 }
 
 const MAX_INPUT_BYTES: u64 = 64 << 20;

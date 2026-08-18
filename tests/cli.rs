@@ -528,6 +528,43 @@ fn release_authorize_writes_a_verifiable_gateway_bundle() {
 }
 
 #[test]
+fn release_authorize_rejects_aliased_or_existing_outputs() {
+    let directory = tempfile::tempdir().unwrap();
+    let shared = directory.path().join("shared.json");
+
+    let mut aliased = Command::cargo_bin("reason").unwrap();
+    aliased
+        .args([
+            "release",
+            "authorize",
+            "examples/release-authorization.json",
+            "--request-out",
+            shared.to_str().unwrap(),
+            "--bundle-out",
+            shared.to_str().unwrap(),
+        ])
+        .assert()
+        .code(1)
+        .stderr(predicate::str::contains("duplicate release output path"));
+    assert!(!shared.exists());
+
+    std::fs::write(&shared, "do not replace").unwrap();
+    let mut existing = Command::cargo_bin("reason").unwrap();
+    existing
+        .args([
+            "release",
+            "authorize",
+            "examples/release-authorization.json",
+            "--bundle-out",
+            shared.to_str().unwrap(),
+        ])
+        .assert()
+        .code(1)
+        .stderr(predicate::str::contains("release output already exists"));
+    assert_eq!(std::fs::read_to_string(shared).unwrap(), "do not replace");
+}
+
+#[test]
 fn release_init_uses_explicit_time_and_never_reads_the_clock() {
     let directory = tempfile::tempdir().unwrap();
     let output = directory.path().join("release.json");

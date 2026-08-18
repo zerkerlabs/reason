@@ -5,7 +5,7 @@ The release-safety domain pack turns four common release signals into an exact-a
 - tests for the target commit;
 - security review for the target commit;
 - a built artifact whose digest matches the proposed deployment;
-- human approval for the target version and environment.
+- human approval for the target version, commit, artifact, and environment.
 
 It compiles this product-level input into the generic `zerker.reason.action.v1` contract. The generated request still uses the same deterministic Reason engine and independent verifier.
 
@@ -29,7 +29,7 @@ reason --format json verify-authorization-bundle \
 
 Only `authorized` exits `0`. Missing or stale evidence exits `2`, explicit failure or denial exits `3`, conflict exits `4`, and malformed or unverifiable material exits `1`.
 
-`release init` requires an explicit evaluation time and uses it for the generated snapshot; it never reads the wall clock. It refuses to overwrite an existing file unless `--force` is provided.
+`release init` requires an explicit evaluation time and uses it for the generated snapshot; it never reads the wall clock. It refuses to overwrite an existing file unless `--force` is provided. `release authorize` stages every requested output before publishing any of them and refuses duplicate or existing output paths, preventing one artifact from silently replacing another.
 
 ## Input contract
 
@@ -60,7 +60,7 @@ The starter uses `zerker.reason.release-authorization.v1` and requires explicit 
     "tests": [{ "commit": "commit_def", "status": "passed", "authority": "tool-reported" }],
     "security_reviews": [{ "commit": "commit_def", "status": "passed", "authority": "human-authorized" }],
     "artifacts": [{ "commit": "commit_def", "digest": "sha256:...", "authority": "tool-reported" }],
-    "approvals": [{ "version": "1.5.0", "environment": "production", "approver": "release-manager", "status": "approved", "authority": "human-authorized" }]
+    "approvals": [{ "version": "1.5.0", "commit": "commit_def", "environment": "production", "artifact_digest": "sha256:...", "approver": "release-manager", "status": "approved", "authority": "human-authorized" }]
   }
 }
 ```

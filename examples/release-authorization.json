@@ -50,7 +50,9 @@
       {
         "id": "evidence_approval_150",
         "version": "1.5.0",
+        "commit": "commit_def",
         "environment": "production",
+        "artifact_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "approver": "release-manager",
         "status": "approved",
         "authority": "human-authorized",

@@ -87,7 +87,9 @@ pub struct ArtifactEvidence {
 pub struct ApprovalEvidence {
     pub id: String,
     pub version: String,
+    pub commit: String,
     pub environment: String,
+    pub artifact_digest: String,
     pub approver: String,
     pub status: ApprovalStatus,
     pub authority: String,
@@ -133,7 +135,7 @@ pub fn compile_release_authorization(
         ("tests_passed".to_owned(), string_predicate(1)),
         ("security_reviewed".to_owned(), string_predicate(1)),
         ("artifact_built".to_owned(), string_predicate(2)),
-        ("release_approved".to_owned(), string_predicate(3)),
+        ("release_approved".to_owned(), string_predicate(5)),
     ]);
     let predicate_admit = BTreeMap::from([
         (
@@ -186,7 +188,9 @@ pub fn compile_release_authorization(
                 predicate: "release_approved".to_owned(),
                 arguments: vec![
                     Value::String(approval.version.clone()),
+                    Value::String(approval.commit.clone()),
                     Value::String(approval.environment.clone()),
+                    Value::String(approval.artifact_digest.clone()),
                     Value::String(approval.approver.clone()),
                 ],
                 negated: approval.status == ApprovalStatus::Denied,
@@ -272,7 +276,13 @@ pub fn compile_release_authorization(
             ),
             atom(
                 "release_approved",
-                vec![version.clone(), environment.clone(), approver.clone()],
+                vec![
+                    version.clone(),
+                    commit.clone(),
+                    environment.clone(),
+                    artifact_digest.clone(),
+                    approver.clone(),
+                ],
                 false,
             ),
         ],
@@ -287,14 +297,14 @@ pub fn compile_release_authorization(
         ),
         deny_rule(
             "release.deny.rejected-security-review",
-            atom("security_reviewed", vec![commit], true),
+            atom("security_reviewed", vec![commit.clone()], true),
             &action_id,
         ),
         deny_rule(
             "release.deny.rejected-approval",
             atom(
                 "release_approved",
-                vec![version, environment, approver],
+                vec![version, commit, environment, artifact_digest, approver],
                 true,
             ),
             &action_id,
@@ -505,6 +515,14 @@ mod tests {
     fn evidence_for_another_commit_does_not_authorize_the_release() {
         let mut input = ready_input();
         input.evidence.tests[0].commit = "commit_old".to_owned();
+        let result = authorize(&compile_release_authorization(&input).unwrap()).unwrap();
+        assert_eq!(result.status, AuthorizationStatus::InsufficientEvidence);
+    }
+
+    #[test]
+    fn approval_for_another_commit_cannot_be_reused() {
+        let mut input = ready_input();
+        input.evidence.approvals[0].commit = "commit_old".to_owned();
         let result = authorize(&compile_release_authorization(&input).unwrap()).unwrap();
         assert_eq!(result.status, AuthorizationStatus::InsufficientEvidence);
     }
