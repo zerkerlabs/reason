@@ -81,9 +81,25 @@ cargo run -- check examples/release-untrusted.json
 
 An agent-proposed approval is withheld and the result remains `UNKNOWN`, with the accepted authority shown as the next requirement. See [`docs/AUTHORITY.md`](docs/AUTHORITY.md).
 
+## Authorize a release without writing policy JSON
+
+Generate an editable release file, then compile tests, review, artifact, and approval evidence into an exact deployment authorization:
+
+```bash
+cargo run -- release init release.json
+cargo run -- release authorize release.json \
+  --request-out action-request.json \
+  --certificate-out authorization.json \
+  --bundle-out authorization-bundle.json
+cargo run -- --format json verify-authorization-bundle \
+  authorization-bundle.json --require-authorized
+```
+
+Evidence for another commit, a mismatched artifact, a stale approval, or an untrusted authority cannot authorize the deployment. See [`docs/RELEASE-SAFETY.md`](docs/RELEASE-SAFETY.md).
+
 ## Authorize an exact action
 
-Check a production deployment against its governed mission, exact tool arguments, declared effects, temporal evidence, and release policy:
+Check any production action against its governed mission, exact tool arguments, declared effects, temporal evidence, and policy:
 
 ```bash
 cargo run -- authorize examples/authorize-deploy.json \
@@ -103,7 +119,7 @@ AUTHORIZED  action_deploy_140 via mission_release_140
             all authorization requirements are proved
 ```
 
-Changed arguments invalidate the certificate. Unknown, denied, and conflicted results fail closed with actionable issues. Reason produces evidence; Guard remains responsible for enforcement. See [`docs/ACTIONS.md`](docs/ACTIONS.md).
+Changed arguments invalidate the certificate. Unknown, denied, and conflicted results fail closed with actionable issues. Reason produces evidence; Gateway or another trusted boundary must compare and enforce the exact call. See [`docs/ACTIONS.md`](docs/ACTIONS.md).
 
 ## Preserve an authorization with Treeship
 

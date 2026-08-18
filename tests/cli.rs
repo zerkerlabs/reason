@@ -484,6 +484,85 @@ fn authorization_json_has_a_stable_machine_contract() {
 }
 
 #[test]
+fn release_authorize_writes_a_verifiable_gateway_bundle() {
+    let directory = tempfile::tempdir().unwrap();
+    let request = directory.path().join("request.json");
+    let certificate = directory.path().join("certificate.json");
+    let bundle = directory.path().join("bundle.json");
+
+    let mut authorize = Command::cargo_bin("reason").unwrap();
+    authorize
+        .args([
+            "release",
+            "authorize",
+            "examples/release-authorization.json",
+            "--request-out",
+            request.to_str().unwrap(),
+            "--certificate-out",
+            certificate.to_str().unwrap(),
+            "--bundle-out",
+            bundle.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::starts_with(
+            "AUTHORIZED  action_deploy_150 via mission_release_150",
+        ));
+
+    assert!(request.is_file());
+    assert!(certificate.is_file());
+    let mut verify = Command::cargo_bin("reason").unwrap();
+    verify
+        .args([
+            "--format",
+            "json",
+            "verify-authorization-bundle",
+            bundle.to_str().unwrap(),
+            "--require-authorized",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "\"authorization_status\": \"authorized\"",
+        ));
+}
+
+#[test]
+fn release_init_refuses_to_overwrite_without_force() {
+    let directory = tempfile::tempdir().unwrap();
+    let output = directory.path().join("release.json");
+    std::fs::write(&output, "keep me").unwrap();
+
+    let mut command = Command::cargo_bin("reason").unwrap();
+    command
+        .args(["release", "init", output.to_str().unwrap()])
+        .assert()
+        .code(1)
+        .stderr(predicate::str::contains("already exists"));
+    assert_eq!(std::fs::read_to_string(output).unwrap(), "keep me");
+}
+
+#[test]
+fn release_authorize_fails_closed_when_approval_is_missing() {
+    let directory = tempfile::tempdir().unwrap();
+    let input = directory.path().join("release.json");
+    let mut value: serde_json::Value =
+        serde_json::from_slice(&std::fs::read("examples/release-authorization.json").unwrap())
+            .unwrap();
+    value["evidence"]["approvals"] = serde_json::json!([]);
+    std::fs::write(&input, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+
+    let mut command = Command::cargo_bin("reason").unwrap();
+    command
+        .args(["release", "authorize", input.to_str().unwrap()])
+        .assert()
+        .code(2)
+        .stdout(predicate::str::starts_with(
+            "INSUFFICIENT_EVIDENCE  action_deploy_150",
+        ));
+}
+
+#[test]
 fn verifier_rejects_a_tampered_proof() {
     let directory = tempfile::tempdir().unwrap();
     let proof = directory.path().join("release-proof.json");

@@ -1,0 +1,62 @@
+{
+  "schema": "zerker.reason.release-authorization.v1",
+  "evaluation_time": "2026-08-18T10:00:00Z",
+  "mission": {
+    "id": "mission_release_150",
+    "principal": "user:release-owner",
+    "instruction_digest": "sha256:6000298698a1bb97ac6e88e1e889cf69fa8ea9b4ab4a9ca2067d1d6f15f1b851",
+    "issued_at": "2026-08-18T08:00:00Z",
+    "valid_until": "2026-08-18T18:00:00Z"
+  },
+  "release": {
+    "action_id": "action_deploy_150",
+    "tool": "deploy_release",
+    "version": "1.5.0",
+    "commit": "commit_def",
+    "environment": "production",
+    "artifact_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "required_approver": "release-manager",
+    "proposed_at": "2026-08-18T10:00:00Z"
+  },
+  "evidence": {
+    "tests": [
+      {
+        "id": "evidence_tests_def",
+        "commit": "commit_def",
+        "status": "passed",
+        "authority": "tool-reported",
+        "observed_at": "2026-08-18T09:00:00Z"
+      }
+    ],
+    "security_reviews": [
+      {
+        "id": "evidence_review_def",
+        "commit": "commit_def",
+        "status": "passed",
+        "authority": "human-authorized",
+        "observed_at": "2026-08-18T09:10:00Z"
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "evidence_artifact_def",
+        "commit": "commit_def",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authority": "tool-reported",
+        "observed_at": "2026-08-18T09:20:00Z"
+      }
+    ],
+    "approvals": [
+      {
+        "id": "evidence_approval_150",
+        "version": "1.5.0",
+        "environment": "production",
+        "approver": "release-manager",
+        "status": "approved",
+        "authority": "human-authorized",
+        "observed_at": "2026-08-18T09:30:00Z",
+        "valid_until": "2026-08-18T12:00:00Z"
+      }
+    ]
+  }
+}

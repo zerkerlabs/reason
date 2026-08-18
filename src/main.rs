@@ -13,10 +13,13 @@ use serde::{
 use zerker_reason::{
     Atom, CheckResult, Program, Status, VerificationResult,
     action::{
-        ActionRequest, AuthorizationBundle, AuthorizationResult, AuthorizationStatus,
-        AuthorizationVerification, authorize, verify_authorization, verify_authorization_bundle,
+        ACTION_REQUEST_SCHEMA, AUTHORIZATION_BUNDLE_SCHEMA, ActionRequest, AuthorizationBundle,
+        AuthorizationResult, AuthorizationStatus, AuthorizationVerification, authorize,
+        verify_authorization, verify_authorization_bundle,
     },
-    check, validate, verify,
+    check,
+    release::{ReleaseAuthorizationInput, compile_release_authorization},
+    validate, verify,
 };
 
 #[derive(Debug, Parser)]
@@ -69,6 +72,35 @@ enum Command {
         /// Return the authorization status exit code after successful verification.
         #[arg(long)]
         require_authorized: bool,
+    },
+    /// Build and evaluate the standard software-release authorization policy.
+    Release {
+        #[command(subcommand)]
+        command: ReleaseCommand,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum ReleaseCommand {
+    /// Write an editable release-authorization starter file.
+    Init {
+        output: PathBuf,
+        /// Replace an existing output file.
+        #[arg(long)]
+        force: bool,
+    },
+    /// Compile release evidence into an exact action request and authorize it.
+    Authorize {
+        input: PathBuf,
+        /// Write the compiled generic action request.
+        #[arg(long)]
+        request_out: Option<PathBuf>,
+        /// Write the independently verifiable authorization certificate.
+        #[arg(long)]
+        certificate_out: Option<PathBuf>,
+        /// Write the request and certificate as one verifier bundle.
+        #[arg(long)]
+        bundle_out: Option<PathBuf>,
     },
 }
 
@@ -204,7 +236,101 @@ fn run(cli: &Cli) -> Result<ExitCode, Box<dyn std::error::Error>> {
                 Ok(ExitCode::SUCCESS)
             }
         }
+        Command::Release { command } => run_release(cli.format, command),
     }
+}
+
+fn run_release(
+    format: OutputFormat,
+    command: &ReleaseCommand,
+) -> Result<ExitCode, Box<dyn std::error::Error>> {
+    match command {
+        ReleaseCommand::Init { output, force } => {
+            if output.exists() && !force {
+                return Err(format!(
+                    "{} already exists; choose another path or pass --force",
+                    output.display()
+                )
+                .into());
+            }
+            fs::write(
+                output,
+                include_bytes!("../examples/release-authorization.json"),
+            )?;
+            match format {
+                OutputFormat::Text => {
+                    println!(
+                        "Release authorization starter written to {}",
+                        output.display()
+                    );
+                    println!("Next: reason release authorize {}", output.display());
+                }
+                OutputFormat::Json => println!(
+                    "{}",
+                    serde_json::json!({
+                        "schema": "zerker.reason.release-init.v1",
+                        "status": "created",
+                        "path": output,
+                    })
+                ),
+            }
+            Ok(ExitCode::SUCCESS)
+        }
+        ReleaseCommand::Authorize {
+            input,
+            request_out,
+            certificate_out,
+            bundle_out,
+        } => {
+            let release: ReleaseAuthorizationInput = load(input)?;
+            let request = compile_release_authorization(&release)?;
+            let result = authorize(&request)?;
+            if let Some(path) = request_out {
+                write_pretty_json(path, &request)?;
+            }
+            if let Some(path) = certificate_out {
+                write_pretty_json(path, &result)?;
+            }
+            if let Some(path) = bundle_out {
+                write_pretty_json(
+                    path,
+                    &AuthorizationBundle {
+                        schema: AUTHORIZATION_BUNDLE_SCHEMA.to_owned(),
+                        request: request.clone(),
+                        certificate: result.clone(),
+                    },
+                )?;
+            }
+            match format {
+                OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&result)?),
+                OutputFormat::Text => {
+                    print_authorization(&result, certificate_out.as_ref());
+                    if let Some(path) = request_out {
+                        println!(
+                            "Request written to {} ({ACTION_REQUEST_SCHEMA})",
+                            path.display()
+                        );
+                    }
+                    if let Some(path) = bundle_out {
+                        println!("Bundle written to {}", path.display());
+                        println!(
+                            "Next: reason verify-authorization-bundle {} --require-authorized",
+                            path.display()
+                        );
+                    }
+                }
+            }
+            Ok(authorization_exit_code(result.status))
+        }
+    }
+}
+
+fn write_pretty_json(
+    path: &PathBuf,
+    value: &impl serde::Serialize,
+) -> Result<(), Box<dyn std::error::Error>> {
+    fs::write(path, format!("{}\n", serde_json::to_string_pretty(value)?))?;
+    Ok(())
 }
 
 const MAX_INPUT_BYTES: u64 = 64 << 20;
