@@ -90,6 +90,7 @@ pub struct ApprovalEvidence {
     pub commit: String,
     pub environment: String,
     pub artifact_digest: String,
+    pub tool: String,
     pub approver: String,
     pub status: ApprovalStatus,
     pub authority: String,
@@ -135,7 +136,7 @@ pub fn compile_release_authorization(
         ("tests_passed".to_owned(), string_predicate(1)),
         ("security_reviewed".to_owned(), string_predicate(1)),
         ("artifact_built".to_owned(), string_predicate(2)),
-        ("release_approved".to_owned(), string_predicate(5)),
+        ("release_approved".to_owned(), string_predicate(6)),
     ]);
     let predicate_admit = BTreeMap::from([
         (
@@ -191,6 +192,7 @@ pub fn compile_release_authorization(
                     Value::String(approval.commit.clone()),
                     Value::String(approval.environment.clone()),
                     Value::String(approval.artifact_digest.clone()),
+                    Value::String(approval.tool.clone()),
                     Value::String(approval.approver.clone()),
                 ],
                 negated: approval.status == ApprovalStatus::Denied,
@@ -281,6 +283,7 @@ pub fn compile_release_authorization(
                     commit.clone(),
                     environment.clone(),
                     artifact_digest.clone(),
+                    Value::String(target.tool.clone()),
                     approver.clone(),
                 ],
                 false,
@@ -304,7 +307,14 @@ pub fn compile_release_authorization(
             "release.deny.rejected-approval",
             atom(
                 "release_approved",
-                vec![version, commit, environment, artifact_digest, approver],
+                vec![
+                    version,
+                    commit,
+                    environment,
+                    artifact_digest,
+                    Value::String(target.tool.clone()),
+                    approver,
+                ],
                 true,
             ),
             &action_id,
@@ -523,6 +533,14 @@ mod tests {
     fn approval_for_another_commit_cannot_be_reused() {
         let mut input = ready_input();
         input.evidence.approvals[0].commit = "commit_old".to_owned();
+        let result = authorize(&compile_release_authorization(&input).unwrap()).unwrap();
+        assert_eq!(result.status, AuthorizationStatus::InsufficientEvidence);
+    }
+
+    #[test]
+    fn approval_for_another_tool_cannot_be_reused() {
+        let mut input = ready_input();
+        input.evidence.approvals[0].tool = "another_deploy_tool".to_owned();
         let result = authorize(&compile_release_authorization(&input).unwrap()).unwrap();
         assert_eq!(result.status, AuthorizationStatus::InsufficientEvidence);
     }

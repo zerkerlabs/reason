@@ -53,6 +53,7 @@
         "commit": "commit_def",
         "environment": "production",
         "artifact_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tool": "deploy_release",
         "approver": "release-manager",
         "status": "approved",
         "authority": "human-authorized",

@@ -5,7 +5,7 @@ The release-safety domain pack turns four common release signals into an exact-a
 - tests for the target commit;
 - security review for the target commit;
 - a built artifact whose digest matches the proposed deployment;
-- human approval for the target version, commit, artifact, and environment.
+- human approval for the target version, commit, artifact, environment, and deployment tool.
 
 It compiles this product-level input into the generic `zerker.reason.action.v1` contract. The generated request still uses the same deterministic Reason engine and independent verifier.
 
@@ -60,7 +60,7 @@ The starter uses `zerker.reason.release-authorization.v1` and requires explicit 
     "tests": [{ "commit": "commit_def", "status": "passed", "authority": "tool-reported" }],
     "security_reviews": [{ "commit": "commit_def", "status": "passed", "authority": "human-authorized" }],
     "artifacts": [{ "commit": "commit_def", "digest": "sha256:...", "authority": "tool-reported" }],
-    "approvals": [{ "version": "1.5.0", "commit": "commit_def", "environment": "production", "artifact_digest": "sha256:...", "approver": "release-manager", "status": "approved", "authority": "human-authorized" }]
+    "approvals": [{ "version": "1.5.0", "commit": "commit_def", "environment": "production", "artifact_digest": "sha256:...", "tool": "deploy_release", "approver": "release-manager", "status": "approved", "authority": "human-authorized" }]
   }
 }
 ```
