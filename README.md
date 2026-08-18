@@ -86,7 +86,8 @@ An agent-proposed approval is withheld and the result remains `UNKNOWN`, with th
 Generate an editable release file, then compile tests, review, artifact, and approval evidence into an exact deployment authorization:
 
 ```bash
-cargo run -- release init release.json
+cargo run -- release init release.json \
+  --evaluation-time 2026-08-18T10:00:00Z
 cargo run -- release authorize release.json \
   --request-out action-request.json \
   --certificate-out authorization.json \

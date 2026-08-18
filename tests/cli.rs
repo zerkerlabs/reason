@@ -528,6 +528,37 @@ fn release_authorize_writes_a_verifiable_gateway_bundle() {
 }
 
 #[test]
+fn release_init_uses_explicit_time_and_never_reads_the_clock() {
+    let directory = tempfile::tempdir().unwrap();
+    let output = directory.path().join("release.json");
+    let at = "2030-01-02T03:04:05Z";
+
+    let mut init = Command::cargo_bin("reason").unwrap();
+    init.args([
+        "release",
+        "init",
+        output.to_str().unwrap(),
+        "--evaluation-time",
+        at,
+    ])
+    .assert()
+    .success();
+
+    let value: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&output).unwrap()).unwrap();
+    assert_eq!(value["evaluation_time"], at);
+    assert_eq!(value["mission"]["issued_at"], at);
+    assert_eq!(value["release"]["proposed_at"], at);
+    assert!(value["mission"].get("valid_until").is_none());
+
+    let mut authorize = Command::cargo_bin("reason").unwrap();
+    authorize
+        .args(["release", "authorize", output.to_str().unwrap()])
+        .assert()
+        .success();
+}
+
+#[test]
 fn release_init_refuses_to_overwrite_without_force() {
     let directory = tempfile::tempdir().unwrap();
     let output = directory.path().join("release.json");
@@ -535,7 +566,13 @@ fn release_init_refuses_to_overwrite_without_force() {
 
     let mut command = Command::cargo_bin("reason").unwrap();
     command
-        .args(["release", "init", output.to_str().unwrap()])
+        .args([
+            "release",
+            "init",
+            output.to_str().unwrap(),
+            "--evaluation-time",
+            "2026-08-18T10:00:00Z",
+        ])
         .assert()
         .code(1)
         .stderr(predicate::str::contains("already exists"));

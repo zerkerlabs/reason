@@ -12,7 +12,8 @@ It compiles this product-level input into the generic `zerker.reason.action.v1` 
 ## Start in two commands
 
 ```bash
-reason release init release.json
+reason release init release.json \
+  --evaluation-time 2026-08-18T10:00:00Z
 reason release authorize release.json \
   --request-out action-request.json \
   --certificate-out authorization.json \
@@ -28,7 +29,7 @@ reason --format json verify-authorization-bundle \
 
 Only `authorized` exits `0`. Missing or stale evidence exits `2`, explicit failure or denial exits `3`, conflict exits `4`, and malformed or unverifiable material exits `1`.
 
-`release init` refuses to overwrite an existing file unless `--force` is provided.
+`release init` requires an explicit evaluation time and uses it for the generated snapshot; it never reads the wall clock. It refuses to overwrite an existing file unless `--force` is provided.
 
 ## Input contract
 

@@ -85,6 +85,9 @@ enum ReleaseCommand {
     /// Write an editable release-authorization starter file.
     Init {
         output: PathBuf,
+        /// Explicit evaluation snapshot time (canonical UTC RFC 3339 seconds).
+        #[arg(long)]
+        evaluation_time: String,
         /// Replace an existing output file.
         #[arg(long)]
         force: bool,
@@ -245,7 +248,11 @@ fn run_release(
     command: &ReleaseCommand,
 ) -> Result<ExitCode, Box<dyn std::error::Error>> {
     match command {
-        ReleaseCommand::Init { output, force } => {
+        ReleaseCommand::Init {
+            output,
+            evaluation_time,
+            force,
+        } => {
             if output.exists() && !force {
                 return Err(format!(
                     "{} already exists; choose another path or pass --force",
@@ -253,10 +260,32 @@ fn run_release(
                 )
                 .into());
             }
-            fs::write(
-                output,
-                include_bytes!("../examples/release-authorization.json"),
-            )?;
+            let mut starter: ReleaseAuthorizationInput =
+                serde_json::from_str(include_str!("../examples/release-authorization.json"))?;
+            starter.evaluation_time = evaluation_time.clone();
+            starter.mission.issued_at = evaluation_time.clone();
+            starter.mission.valid_until = None;
+            starter.release.proposed_at = evaluation_time.clone();
+            for evidence in starter
+                .evidence
+                .tests
+                .iter_mut()
+                .chain(starter.evidence.security_reviews.iter_mut())
+            {
+                evidence.observed_at = evaluation_time.clone();
+                evidence.valid_until = None;
+            }
+            for evidence in &mut starter.evidence.artifacts {
+                evidence.observed_at = evaluation_time.clone();
+                evidence.valid_until = None;
+            }
+            for evidence in &mut starter.evidence.approvals {
+                evidence.observed_at = evaluation_time.clone();
+                evidence.valid_until = None;
+            }
+            let compiled = compile_release_authorization(&starter)?;
+            let _ = authorize(&compiled)?;
+            write_pretty_json(output, &starter)?;
             match format {
                 OutputFormat::Text => {
                     println!(
