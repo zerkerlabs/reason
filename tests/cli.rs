@@ -298,6 +298,43 @@ fn authorization_bundle_require_authorized_preserves_fail_closed_exit_code() {
 }
 
 #[test]
+fn authorization_bundle_rejects_duplicate_members_before_verification() {
+    let request = std::fs::read_to_string("examples/authorize-deploy.json").unwrap();
+    let duplicate_request = request.replacen(
+        "\"arguments\": {\n      \"commit\": \"commit_abc\",\n      \"environment\": \"production\",",
+        "\"arguments\": {\n      \"commit\": \"commit_abc\",\n      \"environment\": \"staging\", \"environment\": \"production\",",
+        1,
+    );
+    assert_ne!(duplicate_request, request);
+
+    let mut authorize = Command::cargo_bin("reason").unwrap();
+    let output = authorize
+        .args([
+            "--format",
+            "json",
+            "authorize",
+            "examples/authorize-deploy.json",
+        ])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let certificate = String::from_utf8(output.stdout).unwrap();
+    let bundle = format!(
+        "{{\"schema\":\"zerker.reason.authorization-bundle.v1\",\"request\":{duplicate_request},\"certificate\":{certificate}}}"
+    );
+
+    let mut verify = Command::cargo_bin("reason").unwrap();
+    verify
+        .args(["--format", "json", "verify-authorization-bundle", "-"])
+        .write_stdin(bundle)
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains(
+            "duplicate object member `environment`",
+        ));
+}
+
+#[test]
 fn authorization_bundle_rejects_an_unknown_schema() {
     let request: serde_json::Value =
         serde_json::from_slice(&std::fs::read("examples/authorize-deploy.json").unwrap()).unwrap();

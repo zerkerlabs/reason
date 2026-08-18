@@ -10,6 +10,7 @@
 ### Changed
 
 - Cap every CLI JSON input at 64 MiB.
+- Reject duplicate JSON object members recursively instead of accepting last-value-wins map entries.
 
 ## [0.1.0] - 2026-08-17
 

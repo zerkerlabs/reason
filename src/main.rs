@@ -6,7 +6,10 @@ use std::{
 };
 
 use clap::{Parser, Subcommand, ValueEnum};
-use serde::de::DeserializeOwned;
+use serde::{
+    Deserialize,
+    de::{self, DeserializeOwned, MapAccess, SeqAccess, Visitor},
+};
 use zerker_reason::{
     Atom, CheckResult, Program, Status, VerificationResult,
     action::{
@@ -212,7 +215,104 @@ fn load<T: DeserializeOwned>(path: &PathBuf) -> Result<T, Box<dyn std::error::Er
     } else {
         read_bounded(fs::File::open(path)?, MAX_INPUT_BYTES)?
     };
-    Ok(serde_json::from_str(&text)?)
+    Ok(parse_unique_json(&text)?)
+}
+
+/// Parse through an untyped tree first so duplicate object members are rejected
+/// recursively, including inside user-defined maps. Serde's derived structs
+/// reject duplicate named fields, but map fields otherwise use last-value-wins,
+/// which makes exact authorization bytes ambiguous across JSON consumers.
+fn parse_unique_json<T: DeserializeOwned>(text: &str) -> Result<T, serde_json::Error> {
+    let mut deserializer = serde_json::Deserializer::from_str(text);
+    let value = UniqueJsonValue::deserialize(&mut deserializer)?.0;
+    deserializer.end()?;
+    serde_json::from_value(value)
+}
+
+struct UniqueJsonValue(serde_json::Value);
+
+impl<'de> Deserialize<'de> for UniqueJsonValue {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_any(UniqueJsonVisitor)
+    }
+}
+
+struct UniqueJsonVisitor;
+
+impl<'de> Visitor<'de> for UniqueJsonVisitor {
+    type Value = UniqueJsonValue;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str("a JSON value with unique object members")
+    }
+
+    fn visit_bool<E>(self, value: bool) -> Result<Self::Value, E> {
+        Ok(UniqueJsonValue(serde_json::Value::Bool(value)))
+    }
+
+    fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E> {
+        Ok(UniqueJsonValue(serde_json::Value::Number(value.into())))
+    }
+
+    fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E> {
+        Ok(UniqueJsonValue(serde_json::Value::Number(value.into())))
+    }
+
+    fn visit_f64<E>(self, value: f64) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        let number = serde_json::Number::from_f64(value)
+            .ok_or_else(|| E::custom("non-finite JSON number"))?;
+        Ok(UniqueJsonValue(serde_json::Value::Number(number)))
+    }
+
+    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E> {
+        Ok(UniqueJsonValue(serde_json::Value::String(value.to_owned())))
+    }
+
+    fn visit_string<E>(self, value: String) -> Result<Self::Value, E> {
+        Ok(UniqueJsonValue(serde_json::Value::String(value)))
+    }
+
+    fn visit_none<E>(self) -> Result<Self::Value, E> {
+        Ok(UniqueJsonValue(serde_json::Value::Null))
+    }
+
+    fn visit_unit<E>(self) -> Result<Self::Value, E> {
+        Ok(UniqueJsonValue(serde_json::Value::Null))
+    }
+
+    fn visit_seq<A>(self, mut sequence: A) -> Result<Self::Value, A::Error>
+    where
+        A: SeqAccess<'de>,
+    {
+        let mut values = Vec::new();
+        while let Some(value) = sequence.next_element::<UniqueJsonValue>()? {
+            values.push(value.0);
+        }
+        Ok(UniqueJsonValue(serde_json::Value::Array(values)))
+    }
+
+    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: MapAccess<'de>,
+    {
+        let mut values = serde_json::Map::new();
+        while let Some(key) = map.next_key::<String>()? {
+            if values.contains_key(&key) {
+                return Err(de::Error::custom(format!(
+                    "duplicate object member `{key}`"
+                )));
+            }
+            let value = map.next_value::<UniqueJsonValue>()?;
+            values.insert(key, value.0);
+        }
+        Ok(UniqueJsonValue(serde_json::Value::Object(values)))
+    }
 }
 
 fn read_bounded(reader: impl Read, limit: u64) -> io::Result<String> {
@@ -488,7 +588,7 @@ fn display_value(value: &serde_json::Value) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::read_bounded;
+    use super::{parse_unique_json, read_bounded};
 
     #[test]
     fn bounded_reader_rejects_input_before_reading_past_the_sentinel_byte() {
@@ -500,5 +600,28 @@ mod tests {
     #[test]
     fn bounded_reader_accepts_input_at_the_limit() {
         assert_eq!(read_bounded("12345678".as_bytes(), 8).unwrap(), "12345678");
+    }
+
+    #[test]
+    fn unique_json_parser_rejects_duplicate_members_at_any_depth() {
+        let error = parse_unique_json::<serde_json::Value>(
+            r#"{"outer":[{"effect":"read","effect":"write"}]}"#,
+        )
+        .unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("duplicate object member `effect`")
+        );
+    }
+
+    #[test]
+    fn unique_json_parser_preserves_nested_values() {
+        let input = r#"{"number":42,"values":[null,true,"text",{"key":-1.5}]}"#;
+        let parsed = parse_unique_json::<serde_json::Value>(input).unwrap();
+        assert_eq!(
+            parsed,
+            serde_json::from_str::<serde_json::Value>(input).unwrap()
+        );
     }
 }
