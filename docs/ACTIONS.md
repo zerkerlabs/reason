@@ -140,10 +140,37 @@ Issues distinguish missing requirements, explicit denial, conflicting authorizat
 
 Recomputation is necessary for `insufficient_evidence`, because absence has no positive proof certificate. Changing a tool argument, effect, mission constraint, policy, premise, authority, timestamp, result status, or issue invalidates the certificate.
 
+## Atomic verification for enforcement points
+
+Gateways and signing adapters should not load the request and certificate from two mutable paths. Supply both values in one versioned bundle instead:
+
+```json
+{
+  "schema": "zerker.reason.authorization-bundle.v1",
+  "request": { "schema": "zerker.reason.action.v1" },
+  "certificate": { "schema": "zerker.reason.authorization.v1" }
+}
+```
+
+```bash
+reason --format json verify-authorization-bundle bundle.json \
+  --require-authorized
+
+# The same contract can be delivered without temporary files.
+cat bundle.json | reason --format json \
+  verify-authorization-bundle - --require-authorized
+```
+
+Without `--require-authorized`, a semantically valid denial, conflict, or insufficient-evidence certificate exits successfully because the certificate verified. With the flag, verification still produces `status: "verified"`, but the process returns the authorization status exit code: 0 only for `authorized`, 2 for `insufficient_evidence`, 3 for `denied`, and 4 for `conflicted`. Verifier errors return 1.
+
+Reason caps every JSON input, including standard input, at 64 MiB. Integrations should set a smaller deployment-specific limit and a subprocess timeout rather than relying on the CLI cap alone.
+
+This bundle proves that the certificate matches the bundled request. An enforcement point must also reconstruct the concrete call it is about to execute and compare its tool and normalized arguments with `request.action`. A verified certificate must never authorize a different call.
+
 ## Component boundaries
 
 - **ZMem** supplies promoted, governed premises.
-- **Reason** derives authorization and produces a verifiable certificate.
-- **Guard** consumes the verified certificate and enforces the action boundary.
-- **Gateway** authenticates and transports requests and certificates.
+- **Reason** derives authorization and independently verifies its certificate.
+- **Gateway** compares the verified action with the exact application call before payment and forwarding.
+- **Guard/Rakhshak** enforces destination-bound local network policy as defense in depth.
 - **Treeship** records mission, action, program, result, proof, and enforcement commitments—including denials.

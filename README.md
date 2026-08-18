@@ -89,6 +89,10 @@ Check a production deployment against its governed mission, exact tool arguments
 cargo run -- authorize examples/authorize-deploy.json \
   --certificate-out authorization.json
 cargo run -- verify-authorization examples/authorize-deploy.json authorization.json
+
+# Enforcement integrations can verify both values from one atomic input.
+cargo run -- --format json verify-authorization-bundle bundle.json \
+  --require-authorized
 ```
 
 ```text

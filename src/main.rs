@@ -1,12 +1,17 @@
-use std::{fs, io::Read, path::PathBuf, process::ExitCode};
+use std::{
+    fs,
+    io::{self, Read},
+    path::PathBuf,
+    process::ExitCode,
+};
 
 use clap::{Parser, Subcommand, ValueEnum};
 use serde::de::DeserializeOwned;
 use zerker_reason::{
     Atom, CheckResult, Program, Status, VerificationResult,
     action::{
-        ActionRequest, AuthorizationResult, AuthorizationStatus, AuthorizationVerification,
-        authorize, verify_authorization,
+        ActionRequest, AuthorizationBundle, AuthorizationResult, AuthorizationStatus,
+        AuthorizationVerification, authorize, verify_authorization, verify_authorization_bundle,
     },
     check, validate, verify,
 };
@@ -54,6 +59,13 @@ enum Command {
     VerifyAuthorization {
         request: PathBuf,
         certificate: PathBuf,
+    },
+    /// Atomically verify a request and certificate supplied in one JSON bundle.
+    VerifyAuthorizationBundle {
+        input: PathBuf,
+        /// Return the authorization status exit code after successful verification.
+        #[arg(long)]
+        require_authorized: bool,
     },
 }
 
@@ -173,26 +185,57 @@ fn run(cli: &Cli) -> Result<ExitCode, Box<dyn std::error::Error>> {
             let request: ActionRequest = load(request)?;
             let result: AuthorizationResult = load(certificate)?;
             let verification = verify_authorization(&request, &result)?;
-            match cli.format {
-                OutputFormat::Text => print_authorization_verification(&verification),
-                OutputFormat::Json => {
-                    println!("{}", serde_json::to_string_pretty(&verification)?)
-                }
-            }
+            print_authorization_verification_for_format(cli.format, &verification)?;
             Ok(ExitCode::SUCCESS)
+        }
+        Command::VerifyAuthorizationBundle {
+            input,
+            require_authorized,
+        } => {
+            let bundle: AuthorizationBundle = load(input)?;
+            let verification = verify_authorization_bundle(&bundle)?;
+            print_authorization_verification_for_format(cli.format, &verification)?;
+            if *require_authorized {
+                Ok(authorization_exit_code(verification.authorization_status))
+            } else {
+                Ok(ExitCode::SUCCESS)
+            }
         }
     }
 }
 
+const MAX_INPUT_BYTES: u64 = 64 << 20;
+
 fn load<T: DeserializeOwned>(path: &PathBuf) -> Result<T, Box<dyn std::error::Error>> {
     let text = if path.as_os_str() == "-" {
-        let mut text = String::new();
-        std::io::stdin().read_to_string(&mut text)?;
-        text
+        read_bounded(io::stdin().lock(), MAX_INPUT_BYTES)?
     } else {
-        fs::read_to_string(path)?
+        read_bounded(fs::File::open(path)?, MAX_INPUT_BYTES)?
     };
     Ok(serde_json::from_str(&text)?)
+}
+
+fn read_bounded(reader: impl Read, limit: u64) -> io::Result<String> {
+    let mut text = String::new();
+    let bytes_read = reader.take(limit + 1).read_to_string(&mut text)?;
+    if bytes_read as u64 > limit {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("input exceeds the {limit}-byte limit"),
+        ));
+    }
+    Ok(text)
+}
+
+fn print_authorization_verification_for_format(
+    format: OutputFormat,
+    verification: &AuthorizationVerification,
+) -> Result<(), serde_json::Error> {
+    match format {
+        OutputFormat::Text => print_authorization_verification(verification),
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(verification)?),
+    }
+    Ok(())
 }
 
 fn print_text_result(result: &CheckResult, proof_out: Option<&PathBuf>) {
@@ -440,5 +483,22 @@ fn display_value(value: &serde_json::Value) -> String {
     match value {
         serde_json::Value::String(value) => value.clone(),
         _ => value.to_string(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::read_bounded;
+
+    #[test]
+    fn bounded_reader_rejects_input_before_reading_past_the_sentinel_byte() {
+        let error = read_bounded("123456789".as_bytes(), 8).unwrap_err();
+        assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
+        assert_eq!(error.to_string(), "input exceeds the 8-byte limit");
+    }
+
+    #[test]
+    fn bounded_reader_accepts_input_at_the_limit() {
+        assert_eq!(read_bounded("12345678".as_bytes(), 8).unwrap(), "12345678");
     }
 }

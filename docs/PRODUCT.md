@@ -8,12 +8,12 @@ The complete loop is:
 
 ```text
 ZMem governed premises
-  -> neural compiler proposes typed ZIR
-  -> Zerker Reason checks, solves, or plans
-  -> Guard authorizes the concrete action
+  -> neural compiler proposes a typed action and policy
+  -> Zerker Reason derives and verifies exact-action authorization
+  -> Gateway compares and enforces the exact application call
+  -> Rakhshak enforces destination-bound local network policy
   -> agent executes
-  -> Treeship records commitments and outcome
-  -> Gateway joins external invocation identity
+  -> Treeship records verified commitments and outcome
 ```
 
 ## First user
@@ -73,6 +73,6 @@ It does not yet claim:
 - cross-language canonical proof encoding;
 - SMT or ASP support;
 - verification of external evidence behind local authority labels;
-- Guard consumption and action-policy enforcement;
-- Treeship authorization and denial receipt integration;
+- Gateway or Rakhshak enforcement integration;
+- atomic Treeship authorization and denial receipt integration;
 - natural-language mission or policy compilation.
