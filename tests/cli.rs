@@ -215,6 +215,214 @@ fn authorization_certificate_verifies_independently() {
 }
 
 #[test]
+fn authorization_bundle_verifies_atomically_from_stdin() {
+    let request: serde_json::Value =
+        serde_json::from_slice(&std::fs::read("examples/authorize-deploy.json").unwrap()).unwrap();
+    let mut authorize = Command::cargo_bin("reason").unwrap();
+    let output = authorize
+        .args([
+            "--format",
+            "json",
+            "authorize",
+            "examples/authorize-deploy.json",
+        ])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let certificate: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let bundle = serde_json::json!({
+        "schema": "zerker.reason.authorization-bundle.v1",
+        "request": request,
+        "certificate": certificate,
+    });
+
+    let mut verify = Command::cargo_bin("reason").unwrap();
+    let output = verify
+        .args([
+            "--format",
+            "json",
+            "verify-authorization-bundle",
+            "-",
+            "--require-authorized",
+        ])
+        .write_stdin(serde_json::to_vec(&bundle).unwrap())
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let verification: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(verification["status"], "verified");
+    assert_eq!(verification["authorization_status"], "authorized");
+}
+
+#[test]
+fn authorization_bundle_require_authorized_preserves_fail_closed_exit_code() {
+    let mut request: serde_json::Value =
+        serde_json::from_slice(&std::fs::read("examples/authorize-deploy.json").unwrap()).unwrap();
+    request["policy"]["facts"]
+        .as_array_mut()
+        .unwrap()
+        .retain(|fact| fact["predicate"] != "approved");
+
+    let mut authorize = Command::cargo_bin("reason").unwrap();
+    let output = authorize
+        .args(["--format", "json", "authorize", "-"])
+        .write_stdin(serde_json::to_vec(&request).unwrap())
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    let certificate: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let bundle = serde_json::json!({
+        "schema": "zerker.reason.authorization-bundle.v1",
+        "request": request,
+        "certificate": certificate,
+    });
+
+    let mut verify = Command::cargo_bin("reason").unwrap();
+    verify
+        .args([
+            "--format",
+            "json",
+            "verify-authorization-bundle",
+            "-",
+            "--require-authorized",
+        ])
+        .write_stdin(serde_json::to_vec(&bundle).unwrap())
+        .assert()
+        .code(2)
+        .stdout(predicate::str::contains("\"status\": \"verified\""))
+        .stdout(predicate::str::contains(
+            "\"authorization_status\": \"insufficient_evidence\"",
+        ));
+}
+
+#[test]
+fn authorization_bundle_rejects_duplicate_members_before_verification() {
+    let request = std::fs::read_to_string("examples/authorize-deploy.json").unwrap();
+    let duplicate_request = request.replacen(
+        "\"arguments\": {\n      \"commit\": \"commit_abc\",\n      \"environment\": \"production\",",
+        "\"arguments\": {\n      \"commit\": \"commit_abc\",\n      \"environment\": \"staging\", \"environment\": \"production\",",
+        1,
+    );
+    assert_ne!(duplicate_request, request);
+
+    let mut authorize = Command::cargo_bin("reason").unwrap();
+    let output = authorize
+        .args([
+            "--format",
+            "json",
+            "authorize",
+            "examples/authorize-deploy.json",
+        ])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let certificate = String::from_utf8(output.stdout).unwrap();
+    let bundle = format!(
+        "{{\"schema\":\"zerker.reason.authorization-bundle.v1\",\"request\":{duplicate_request},\"certificate\":{certificate}}}"
+    );
+
+    let mut verify = Command::cargo_bin("reason").unwrap();
+    verify
+        .args(["--format", "json", "verify-authorization-bundle", "-"])
+        .write_stdin(bundle)
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains(
+            "duplicate object member `environment`",
+        ));
+}
+
+#[test]
+fn authorization_bundle_rejects_unknown_action_members_before_verification() {
+    let mut request: serde_json::Value =
+        serde_json::from_slice(&std::fs::read("examples/authorize-deploy.json").unwrap()).unwrap();
+    request["action"]["unrecognized_execution_mode"] = serde_json::json!("bypass");
+
+    let mut authorize = Command::cargo_bin("reason").unwrap();
+    let output = authorize
+        .args([
+            "--format",
+            "json",
+            "authorize",
+            "examples/authorize-deploy.json",
+        ])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let certificate: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let bundle = serde_json::json!({
+        "schema": "zerker.reason.authorization-bundle.v1",
+        "request": request,
+        "certificate": certificate,
+    });
+
+    let mut verify = Command::cargo_bin("reason").unwrap();
+    verify
+        .args([
+            "--format",
+            "json",
+            "verify-authorization-bundle",
+            "-",
+            "--require-authorized",
+        ])
+        .write_stdin(serde_json::to_vec(&bundle).unwrap())
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains("unrecognized_execution_mode"))
+        .stdout(predicate::str::contains("unknown object member"));
+}
+
+#[test]
+fn authorization_request_rejects_unknown_flattened_fact_members() {
+    let mut request: serde_json::Value =
+        serde_json::from_slice(&std::fs::read("examples/authorize-deploy.json").unwrap()).unwrap();
+    request["policy"]["facts"][0]["unrecognized_trust_override"] = serde_json::json!(true);
+
+    let mut authorize = Command::cargo_bin("reason").unwrap();
+    authorize
+        .args(["--format", "json", "authorize", "-"])
+        .write_stdin(serde_json::to_vec(&request).unwrap())
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains("unrecognized_trust_override"))
+        .stdout(predicate::str::contains("unknown field"));
+}
+
+#[test]
+fn authorization_bundle_rejects_an_unknown_schema() {
+    let request: serde_json::Value =
+        serde_json::from_slice(&std::fs::read("examples/authorize-deploy.json").unwrap()).unwrap();
+    let mut authorize = Command::cargo_bin("reason").unwrap();
+    let output = authorize
+        .args([
+            "--format",
+            "json",
+            "authorize",
+            "examples/authorize-deploy.json",
+        ])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let certificate: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let bundle = serde_json::json!({
+        "schema": "zerker.reason.authorization-bundle.v0",
+        "request": request,
+        "certificate": certificate,
+    });
+    let mut verify = Command::cargo_bin("reason").unwrap();
+    verify
+        .args(["--format", "json", "verify-authorization-bundle", "-"])
+        .write_stdin(serde_json::to_vec(&bundle).unwrap())
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains(
+            "zerker.reason.authorization-bundle.v1",
+        ));
+}
+
+#[test]
 fn authorization_verifier_rejects_changed_tool_arguments() {
     let directory = tempfile::tempdir().unwrap();
     let certificate = directory.path().join("authorization.json");

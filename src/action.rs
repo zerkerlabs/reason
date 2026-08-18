@@ -11,6 +11,7 @@ use crate::{
 pub const ACTION_REQUEST_SCHEMA: &str = "zerker.reason.action.v1";
 pub const AUTHORIZATION_RESULT_SCHEMA: &str = "zerker.reason.authorization.v1";
 pub const AUTHORIZATION_VERIFICATION_SCHEMA: &str = "zerker.reason.authorization-verification.v1";
+pub const AUTHORIZATION_BUNDLE_SCHEMA: &str = "zerker.reason.authorization-bundle.v1";
 const POLICY_SCHEMA: &str = "zerker.reason.program.v2";
 const SYSTEM_AUTHORITY: &str = "system-bound";
 const SYSTEM_FACT_PREFIX: &str = "zerker.action.binding.";
@@ -112,6 +113,15 @@ pub struct AuthorizationIssue {
     pub fact_ids: Vec<String>,
 }
 
+/// Atomic transport for verifiers that must consume a request and its
+/// certificate from one bounded input stream rather than two mutable paths.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct AuthorizationBundle {
+    pub schema: String,
+    pub request: ActionRequest,
+    pub certificate: AuthorizationResult,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct AuthorizationVerification {
     pub schema: String,
@@ -145,6 +155,18 @@ pub fn authorize(request: &ActionRequest) -> Result<AuthorizationResult, ReasonE
         reasoning,
         issues,
     })
+}
+
+pub fn verify_authorization_bundle(
+    bundle: &AuthorizationBundle,
+) -> Result<AuthorizationVerification, ReasonError> {
+    if bundle.schema != AUTHORIZATION_BUNDLE_SCHEMA {
+        return invalid_authorization(format!(
+            "$.schema: expected {AUTHORIZATION_BUNDLE_SCHEMA:?}, got {:?}",
+            bundle.schema
+        ));
+    }
+    verify_authorization(&bundle.request, &bundle.certificate)
 }
 
 pub fn verify_authorization(

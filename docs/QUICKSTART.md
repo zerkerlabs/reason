@@ -97,4 +97,4 @@ reason --format json authorize examples/authorize-deploy.json \
   --certificate-out authorization.json
 ```
 
-Treat only `status: "authorized"` with exit code `0` as permission to continue. An enforcement layer such as Guard must still bind execution to the exact certified action.
+Treat only `status: "authorized"` with exit code `0` as permission to continue. Gateway must still compare the exact application call with the certified action before forwarding; Rakhshak may separately enforce its destination-bound network grant.

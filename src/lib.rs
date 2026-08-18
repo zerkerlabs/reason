@@ -60,7 +60,7 @@ pub struct AuthorityPolicy {
     pub predicate_admit: BTreeMap<String, BTreeSet<String>>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Fact {
     pub id: String,
     #[serde(flatten)]
@@ -74,6 +74,51 @@ pub struct Fact {
     pub valid_until: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub supersedes: Vec<String>,
+}
+
+// `Fact` is flattened on the wire for readability. A derived deserializer for
+// a flattened struct silently consumes unknown fields, so use an explicit wire
+// shape to keep strict CLI parsing effective inside policy facts too.
+impl<'de> Deserialize<'de> for Fact {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct FactWire {
+            id: String,
+            predicate: String,
+            #[serde(default)]
+            arguments: Vec<Value>,
+            #[serde(default)]
+            negated: bool,
+            authority: String,
+            #[serde(default)]
+            observed_at: Option<String>,
+            #[serde(default)]
+            valid_from: Option<String>,
+            #[serde(default)]
+            valid_until: Option<String>,
+            #[serde(default)]
+            supersedes: Vec<String>,
+        }
+
+        let wire = FactWire::deserialize(deserializer)?;
+        Ok(Self {
+            id: wire.id,
+            atom: Atom {
+                predicate: wire.predicate,
+                arguments: wire.arguments,
+                negated: wire.negated,
+            },
+            authority: wire.authority,
+            observed_at: wire.observed_at,
+            valid_from: wire.valid_from,
+            valid_until: wire.valid_until,
+            supersedes: wire.supersedes,
+        })
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

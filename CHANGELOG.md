@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Verify an action request and authorization certificate atomically from one versioned JSON bundle, including standard input for subprocess integrations.
+- Optionally preserve fail-closed authorization exit codes after successful bundle verification.
+
+### Changed
+
+- Cap every CLI JSON input at 64 MiB.
+- Reject duplicate JSON object members recursively instead of accepting last-value-wins map entries.
+- Reject unrecognized members in versioned CLI JSON schemas instead of silently discarding unsigned semantics.
+
 ## [0.1.0] - 2026-08-17
 
 ### Added
