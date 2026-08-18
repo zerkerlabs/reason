@@ -254,13 +254,6 @@ fn run_release(
             evaluation_time,
             force,
         } => {
-            if output.exists() && !force {
-                return Err(format!(
-                    "{} already exists; choose another path or pass --force",
-                    output.display()
-                )
-                .into());
-            }
             let mut starter: ReleaseAuthorizationInput =
                 serde_json::from_str(include_str!("../examples/release-authorization.json"))?;
             starter.evaluation_time = evaluation_time.clone();
@@ -286,7 +279,12 @@ fn run_release(
             }
             let compiled = compile_release_authorization(&starter)?;
             let _ = authorize(&compiled)?;
-            write_pretty_json(output, &starter)?;
+            let bytes = pretty_json_bytes(&starter)?;
+            if *force {
+                fs::write(output, bytes)?;
+            } else {
+                write_output_set(vec![(output.clone(), bytes)])?;
+            }
             match format {
                 OutputFormat::Text => {
                     println!(
@@ -353,14 +351,6 @@ fn run_release(
             Ok(authorization_exit_code(result.status))
         }
     }
-}
-
-fn write_pretty_json(
-    path: &PathBuf,
-    value: &impl serde::Serialize,
-) -> Result<(), Box<dyn std::error::Error>> {
-    fs::write(path, pretty_json_bytes(value)?)?;
-    Ok(())
 }
 
 fn pretty_json_bytes(value: &impl serde::Serialize) -> Result<Vec<u8>, serde_json::Error> {
