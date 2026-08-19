@@ -21,6 +21,12 @@ The contract is local, deterministic, and does not require an LLM, account, daem
 
 An authorization result does not execute anything. Guard remains responsible for enforcing whether the action may run.
 
+## Machine-readable wire schemas
+
+Draft 2020-12 schemas for the request, certificate, atomic bundle, verification result, and CLI error are committed in [`schemas/`](../schemas/README.md). They validate JSON wire shape, closed typed objects, status vocabularies, and digest/timestamp encoding. They do not recompute a digest, replay a proof, establish premise truth, or decide authorization; the Reason verifier remains authoritative.
+
+Keep `zerker.reason.contracts.v1.schema.json` beside an entry schema so its relative `$ref` resolves.
+
 ## Request schema
 
 `zerker.reason.action.v1` binds three objects:
