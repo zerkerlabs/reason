@@ -174,3 +174,5 @@ This bundle proves that the certificate matches the bundled request. An enforcem
 - **Gateway** compares the verified action with the exact application call before payment and forwarding.
 - **Guard/Rakhshak** enforces destination-bound local network policy as defense in depth.
 - **Treeship** records mission, action, program, result, proof, and enforcement commitments—including denials.
+
+See [Integration profiles](INTEGRATION_PROFILES.md) for the exact adapter-owned fields and checks. Profile keys remain application-defined and are not universal Reason requirements.

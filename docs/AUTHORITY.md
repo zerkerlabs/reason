@@ -62,4 +62,4 @@ Authority class names use lowercase letters, digits, and internal hyphens. A pro
 
 The program digest binds the complete authority policy and every fact authority. The independent verifier also recomputes the authority report and rejects any proof containing a fact withheld by policy.
 
-Current authority labels are local assertions. Future ZMem, Guard, Gateway, and Treeship adapters will verify the external evidence behind those labels before constructing facts. Calling a fact `human-authorized` does not by itself prove a human authorized it.
+Reason authority labels are local assertions. The ZMem, Gateway, Rakhshak, and Treeship integration profiles keep external governance, identity, enforcement, and signing checks outside the Reason kernel. Calling a fact `human-authorized` does not by itself prove a human authorized it. See [Integration profiles](INTEGRATION_PROFILES.md).

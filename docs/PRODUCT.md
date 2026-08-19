@@ -72,7 +72,9 @@ It does not yet claim:
 - a separately packaged minimal/WASM proof kernel;
 - cross-language canonical proof encoding;
 - SMT or ASP support;
-- verification of external evidence behind local authority labels;
-- Gateway or Rakhshak enforcement integration;
-- atomic Treeship authorization and denial receipt integration;
+- verification of external evidence behind local authority labels inside Reason core;
+- authenticated Gateway identity, Rakhshak process/destination enforcement, or Treeship signing inside Reason core;
+- a Reason-owned universal schema for downstream profile keys;
 - natural-language mission or policy compilation.
+
+The Gateway, Rakhshak, Treeship, and ZMem integration profiles consume Reason contracts while retaining those responsibilities. See [Integration profiles](INTEGRATION_PROFILES.md).
