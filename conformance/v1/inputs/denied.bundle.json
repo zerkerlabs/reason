@@ -1,0 +1,504 @@
+{
+  "certificate": {
+    "action": {
+      "arguments": {
+        "commit": "commit_abc",
+        "environment": "production",
+        "version": "1.4.0"
+      },
+      "digest": "sha256:49aac94a837a556785ab6824a6e9c4c77cfa8cc34df48496303ddd8f96c31bea",
+      "effects": [
+        {
+          "kind": "deploy",
+          "resource": "release:1.4.0",
+          "value": "production"
+        }
+      ],
+      "id": "action_deploy_denied",
+      "tool": "deploy_release"
+    },
+    "issues": [
+      {
+        "atom": {
+          "arguments": [
+            "action_deploy_denied"
+          ],
+          "negated": true,
+          "predicate": "action_authorized"
+        },
+        "code": "explicit_denial",
+        "message": "The policy derives explicit denial for this exact action."
+      }
+    ],
+    "mission": {
+      "digest": "sha256:bd9f1fee10ccf478aebe3900b9879c835c04f009f8f8b74b4fbef3882ff4a85d",
+      "id": "mission_release_140"
+    },
+    "reasoning": {
+      "assumptions": [
+        "Only facts admitted by the explicit authority policy participate in inference.",
+        "Explicit negation does not use absence as evidence of falsity.",
+        "Contradictory support is preserved as inconsistent instead of resolved silently."
+      ],
+      "authority": {
+        "admitted_fact_ids": [
+          "fact_rejection_140",
+          "fact_review_abc",
+          "fact_tests_abc",
+          "zerker.action.binding.action.argument.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+          "zerker.action.binding.action.argument.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+          "zerker.action.binding.action.argument.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+          "zerker.action.binding.action.effect.0000",
+          "zerker.action.binding.action.tool",
+          "zerker.action.binding.mission.action",
+          "zerker.action.binding.mission.active",
+          "zerker.action.binding.mission.constraint.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+          "zerker.action.binding.mission.constraint.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+          "zerker.action.binding.mission.constraint.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+          "zerker.action.binding.mission.instruction",
+          "zerker.action.binding.mission.principal"
+        ],
+        "policy_digest": "sha256:1d8f4910513651308852a74cf5722e55b02e82132a6600bed51e4956c1035413",
+        "withheld": []
+      },
+      "conflict": null,
+      "disproof": {
+        "digest": "sha256:811eb55f5e09df5f78fd2589a4e21a96792a0f5ad70df1e6e30bd1b8cf46d71c",
+        "nodes": [
+          {
+            "atom": {
+              "arguments": [
+                "1.4.0",
+                "release-manager"
+              ],
+              "negated": true,
+              "predicate": "approved"
+            },
+            "authority": "human-authorized",
+            "id": "node_1649a21e0c1601e9e5b0306fa86f8019c535f444f22f9b592f3338febecdeb7c",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "fact_rejection_140",
+            "temporal": {
+              "observed_at": "2026-08-14T11:10:00Z",
+              "valid_until": "2026-08-14T16:00:00Z"
+            }
+          },
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_denied"
+              ],
+              "negated": true,
+              "predicate": "action_authorized"
+            },
+            "id": "node_24e4a2b33930f39ef382904070a10a0cbde06ca7604554bf49c1f27eb8ec687a",
+            "kind": "derivation",
+            "premises": [
+              "node_2ff5d991b5c2b18c8ddc873886013a31b23470503f8a9c8cd56871b84e92db3d",
+              "node_88fbea72878662056d6b075be774fafa9abed0b767d542bd86c243a9dfe050f8",
+              "node_1649a21e0c1601e9e5b0306fa86f8019c535f444f22f9b592f3338febecdeb7c"
+            ],
+            "source_id": "rule_deny_rejected_release"
+          },
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_denied",
+                "deploy_release"
+              ],
+              "predicate": "action_tool"
+            },
+            "authority": "system-bound",
+            "id": "node_2ff5d991b5c2b18c8ddc873886013a31b23470503f8a9c8cd56871b84e92db3d",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.action.tool",
+            "temporal": {
+              "observed_at": "2026-08-14T12:00:00Z"
+            }
+          },
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_denied",
+                "version",
+                "1.4.0"
+              ],
+              "predicate": "action_argument"
+            },
+            "authority": "system-bound",
+            "id": "node_88fbea72878662056d6b075be774fafa9abed0b767d542bd86c243a9dfe050f8",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.action.argument.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+            "temporal": {
+              "observed_at": "2026-08-14T12:00:00Z"
+            }
+          }
+        ],
+        "root": "node_24e4a2b33930f39ef382904070a10a0cbde06ca7604554bf49c1f27eb8ec687a"
+      },
+      "metrics": {
+        "facts_admitted": 15,
+        "facts_derived": 1,
+        "facts_supplied": 15,
+        "facts_withheld": 0,
+        "rounds": 2,
+        "rules_evaluated": 6
+      },
+      "missing": [
+        {
+          "arguments": [
+            "1.4.0",
+            "release-manager"
+          ],
+          "predicate": "approved"
+        }
+      ],
+      "ontology": {
+        "digest": "sha256:517d7e2aa824a94ad2448867716ba0a9c9fe3f584156ebe2c6ff8af50fd0aa32",
+        "id": "software-release-authorization",
+        "version": "0.1.0"
+      },
+      "program_digest": "sha256:119dbbf69c84f941b902389338dbf9abdbc48e7dfaa2c04bcdd1f81a8eb3398d",
+      "proof": null,
+      "query": {
+        "arguments": [
+          "action_deploy_denied"
+        ],
+        "predicate": "action_authorized"
+      },
+      "schema": "zerker.reason.result.v2",
+      "status": "disproved",
+      "temporal": {
+        "eligible_fact_ids": [
+          "fact_rejection_140",
+          "fact_review_abc",
+          "fact_tests_abc",
+          "zerker.action.binding.action.argument.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+          "zerker.action.binding.action.argument.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+          "zerker.action.binding.action.argument.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+          "zerker.action.binding.action.effect.0000",
+          "zerker.action.binding.action.tool",
+          "zerker.action.binding.mission.action",
+          "zerker.action.binding.mission.active",
+          "zerker.action.binding.mission.constraint.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+          "zerker.action.binding.mission.constraint.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+          "zerker.action.binding.mission.constraint.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+          "zerker.action.binding.mission.instruction",
+          "zerker.action.binding.mission.principal"
+        ],
+        "evaluation_time": "2026-08-14T12:00:00Z",
+        "withheld": []
+      }
+    },
+    "request_digest": "sha256:97d8cd39f4c99c3283a03885e5a5084397d008f77e91c52c2ec95fd7f7eac065",
+    "schema": "zerker.reason.authorization.v1",
+    "status": "denied"
+  },
+  "request": {
+    "action": {
+      "arguments": {
+        "commit": "commit_abc",
+        "environment": "production",
+        "version": "1.4.0"
+      },
+      "effects": [
+        {
+          "kind": "deploy",
+          "resource": "release:1.4.0",
+          "value": "production"
+        }
+      ],
+      "id": "action_deploy_denied",
+      "proposed_at": "2026-08-14T12:00:00Z",
+      "tool": "deploy_release"
+    },
+    "mission": {
+      "constraints": {
+        "commit": "commit_abc",
+        "environment": "production",
+        "version": "1.4.0"
+      },
+      "id": "mission_release_140",
+      "instruction_digest": "sha256:6000298698a1bb97ac6e88e1e889cf69fa8ea9b4ab4a9ca2067d1d6f15f1b851",
+      "issued_at": "2026-08-14T10:00:00Z",
+      "principal": "user:release-owner",
+      "valid_until": "2026-08-14T18:00:00Z"
+    },
+    "policy": {
+      "authority": {
+        "classes": [
+          "agent-proposed",
+          "tool-reported",
+          "human-authorized"
+        ],
+        "default_admit": [
+          "tool-reported",
+          "human-authorized"
+        ],
+        "predicate_admit": {
+          "approved": [
+            "human-authorized"
+          ],
+          "security_reviewed": [
+            "human-authorized"
+          ],
+          "tests_passed": [
+            "tool-reported"
+          ]
+        }
+      },
+      "evaluation_time": "2026-08-14T12:00:00Z",
+      "facts": [
+        {
+          "arguments": [
+            "commit_abc"
+          ],
+          "authority": "tool-reported",
+          "id": "fact_tests_abc",
+          "observed_at": "2026-08-14T11:00:00Z",
+          "predicate": "tests_passed"
+        },
+        {
+          "arguments": [
+            "commit_abc"
+          ],
+          "authority": "human-authorized",
+          "id": "fact_review_abc",
+          "observed_at": "2026-08-14T11:05:00Z",
+          "predicate": "security_reviewed"
+        },
+        {
+          "arguments": [
+            "1.4.0",
+            "release-manager"
+          ],
+          "authority": "human-authorized",
+          "id": "fact_rejection_140",
+          "negated": true,
+          "observed_at": "2026-08-14T11:10:00Z",
+          "predicate": "approved",
+          "valid_until": "2026-08-14T16:00:00Z"
+        }
+      ],
+      "ontology": {
+        "id": "software-release-authorization",
+        "predicates": {
+          "approved": {
+            "arguments": [
+              "string",
+              "string"
+            ]
+          },
+          "security_reviewed": {
+            "arguments": [
+              "string"
+            ]
+          },
+          "tests_passed": {
+            "arguments": [
+              "string"
+            ]
+          }
+        },
+        "version": "0.1.0"
+      },
+      "query": {
+        "arguments": [
+          "action_deploy_denied"
+        ],
+        "predicate": "action_authorized"
+      },
+      "rules": [
+        {
+          "id": "rule_authorize_production_deploy",
+          "then": {
+            "arguments": [
+              "$action"
+            ],
+            "predicate": "action_authorized"
+          },
+          "when": [
+            {
+              "arguments": [
+                "$mission"
+              ],
+              "predicate": "mission_active"
+            },
+            {
+              "arguments": [
+                "$mission",
+                "$action"
+              ],
+              "predicate": "mission_action"
+            },
+            {
+              "arguments": [
+                "$mission",
+                "user:release-owner"
+              ],
+              "predicate": "mission_principal"
+            },
+            {
+              "arguments": [
+                "$mission",
+                "environment",
+                "production"
+              ],
+              "predicate": "mission_constraint"
+            },
+            {
+              "arguments": [
+                "$mission",
+                "version",
+                "1.4.0"
+              ],
+              "predicate": "mission_constraint"
+            },
+            {
+              "arguments": [
+                "$mission",
+                "commit",
+                "commit_abc"
+              ],
+              "predicate": "mission_constraint"
+            },
+            {
+              "arguments": [
+                "$action",
+                "deploy_release"
+              ],
+              "predicate": "action_tool"
+            },
+            {
+              "arguments": [
+                "$action",
+                "environment",
+                "production"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "version",
+                "1.4.0"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "commit",
+                "commit_abc"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "deploy",
+                "release:1.4.0",
+                "production"
+              ],
+              "predicate": "action_effect"
+            },
+            {
+              "arguments": [
+                "commit_abc"
+              ],
+              "predicate": "tests_passed"
+            },
+            {
+              "arguments": [
+                "commit_abc"
+              ],
+              "predicate": "security_reviewed"
+            },
+            {
+              "arguments": [
+                "1.4.0",
+                "release-manager"
+              ],
+              "predicate": "approved"
+            }
+          ]
+        },
+        {
+          "id": "rule_deny_revoked_security_review",
+          "then": {
+            "arguments": [
+              "$action"
+            ],
+            "negated": true,
+            "predicate": "action_authorized"
+          },
+          "when": [
+            {
+              "arguments": [
+                "$action",
+                "deploy_release"
+              ],
+              "predicate": "action_tool"
+            },
+            {
+              "arguments": [
+                "$action",
+                "commit",
+                "$commit"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$commit"
+              ],
+              "negated": true,
+              "predicate": "security_reviewed"
+            }
+          ]
+        },
+        {
+          "id": "rule_deny_rejected_release",
+          "then": {
+            "arguments": [
+              "$action"
+            ],
+            "negated": true,
+            "predicate": "action_authorized"
+          },
+          "when": [
+            {
+              "arguments": [
+                "$action",
+                "deploy_release"
+              ],
+              "predicate": "action_tool"
+            },
+            {
+              "arguments": [
+                "$action",
+                "version",
+                "$version"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$version",
+                "release-manager"
+              ],
+              "negated": true,
+              "predicate": "approved"
+            }
+          ]
+        }
+      ],
+      "schema": "zerker.reason.program.v2"
+    },
+    "schema": "zerker.reason.action.v1"
+  },
+  "schema": "zerker.reason.authorization-bundle.v1"
+}

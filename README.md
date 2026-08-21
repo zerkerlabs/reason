@@ -141,6 +141,8 @@ cargo run -- --format json capabilities
 
 The deterministic `zerker.reason.capabilities.v1` response declares the binary version, supported wire identifiers, commands, all public output statuses, exit-code meanings, and 64 MiB CLI input limit. It contains no host paths, environment values, ambient time, network state, or build-machine details. See [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md).
 
+Replay [`conformance/v1/manifest.json`](conformance/v1/manifest.json) to test the same exact-action verifier outcomes, digests, malformed inputs, and integration-profile bindings across implementations. These are public fixtures, not live authorizations.
+
 ## For agents
 
 Use deterministic JSON over stdin:
