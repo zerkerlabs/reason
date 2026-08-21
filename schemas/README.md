@@ -7,6 +7,8 @@ These Draft 2020-12 schemas describe the JSON wire shape of Reason's stable acti
 - `zerker.reason.authorization-bundle.v1.schema.json`
 - `zerker.reason.authorization-verification.v1.schema.json`
 - `zerker.reason.error.v1.schema.json`
+- `zerker.reason.release-authorization.v1.schema.json`
+- `zerker.reason.release-init.v1.schema.json`
 
 Keep `zerker.reason.contracts.v1.schema.json` beside the entry schema when validating so its relative `$ref` resolves. The entry schema's title is the corresponding wire-level `schema` value; the filename and `$id` identify the JSON Schema document.
 

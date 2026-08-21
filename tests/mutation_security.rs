@@ -3,8 +3,11 @@ use std::collections::BTreeSet;
 use assert_cmd::Command;
 use serde::de::DeserializeOwned;
 use serde_json::{Number, Value, json};
-use zerker_reason::action::{
-    ActionRequest, AuthorizationBundle, AuthorizationResult, verify_authorization,
+use zerker_reason::{
+    action::{
+        ActionRequest, AuthorizationBundle, AuthorizationResult, authorize, verify_authorization,
+    },
+    release::{ReleaseAuthorizationInput, compile_release_authorization},
 };
 
 fn bundle(name: &str) -> Value {
@@ -103,6 +106,34 @@ fn every_serialized_request_leaf_is_rejected_or_invalidates_its_certificate() {
             "policy".to_owned(),
             "schema".to_owned()
         ])
+    );
+}
+
+#[test]
+fn every_release_domain_input_leaf_is_rejected_or_invalidates_the_compiled_certificate() {
+    let value: Value =
+        serde_json::from_slice(&std::fs::read("examples/release-authorization.json").unwrap())
+            .unwrap();
+    let input: ReleaseAuthorizationInput = serde_json::from_value(value.clone()).unwrap();
+    let request = compile_release_authorization(&input).unwrap();
+    let certificate = authorize(&request).unwrap();
+    let mut exercised = 0;
+
+    for path in leaf_paths(&value) {
+        exercised += 1;
+        if let Some(changed) = parses::<ReleaseAuthorizationInput>(mutate_at(&value, &path))
+            && let Ok(changed_request) = compile_release_authorization(&changed)
+        {
+            assert!(
+                verify_authorization(&changed_request, &certificate).is_err(),
+                "release input mutation at {path} retained the prior compiled certificate"
+            );
+        }
+    }
+
+    assert!(
+        exercised > 35,
+        "release input mutation coverage unexpectedly shrank: {exercised} leaves"
     );
 }
 
@@ -212,6 +243,28 @@ fn cli_rejects_unknown_members_across_typed_bundle_objects() {
                 "-",
                 "--require-authorized",
             ])
+            .write_stdin(payload)
+            .assert()
+            .code(1);
+    }
+
+    let release_input: Value =
+        serde_json::from_slice(&std::fs::read("examples/release-authorization.json").unwrap())
+            .unwrap();
+    for pointer in [
+        "",
+        "/mission",
+        "/release",
+        "/evidence",
+        "/evidence/tests/0",
+        "/evidence/security_reviews/0",
+        "/evidence/artifacts/0",
+        "/evidence/approvals/0",
+    ] {
+        let payload = serde_json::to_vec(&inject_unknown(&release_input, pointer)).unwrap();
+        Command::cargo_bin("reason")
+            .unwrap()
+            .args(["--format", "json", "release", "authorize", "-"])
             .write_stdin(payload)
             .assert()
             .code(1);

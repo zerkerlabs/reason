@@ -4,6 +4,8 @@
 
 ### Added
 
+- Compile a product-level release-safety input into an exact deployment authorization with `reason release init` and `reason release authorize`.
+- Emit the compiled request, certificate, and atomic Gateway-ready bundle from one release command.
 - Verify an action request and authorization certificate atomically from one versioned JSON bundle, including standard input for subprocess integrations.
 - Optionally preserve fail-closed authorization exit codes after successful bundle verification.
 

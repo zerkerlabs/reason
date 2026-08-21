@@ -9,6 +9,7 @@ use zerker_reason::{
         AUTHORIZATION_VERIFICATION_SCHEMA, ActionRequest, AuthorizationBundle, AuthorizationResult,
         authorize, verify_authorization,
     },
+    release::{RELEASE_AUTHORIZATION_SCHEMA, RELEASE_INIT_SCHEMA, ReleaseAuthorizationInput},
 };
 
 const CATALOG: &str = include_str!("../schemas/zerker.reason.contracts.v1.schema.json");
@@ -91,6 +92,16 @@ fn entry_schemas_match_rust_wire_identifiers_and_catalog_definitions() {
             "zerker.reason.authorization-verification.v1.schema.json",
         ),
         (ERROR_SCHEMA, "error", "zerker.reason.error.v1.schema.json"),
+        (
+            RELEASE_AUTHORIZATION_SCHEMA,
+            "releaseAuthorizationInput",
+            "zerker.reason.release-authorization.v1.schema.json",
+        ),
+        (
+            RELEASE_INIT_SCHEMA,
+            "releaseInit",
+            "zerker.reason.release-init.v1.schema.json",
+        ),
     ];
     let catalog: Value = serde_json::from_str(CATALOG).unwrap();
     let schema_readme = fs::read_to_string("schemas/README.md").unwrap();
@@ -151,6 +162,18 @@ fn entry_schemas_resolve_the_committed_catalog() {
                 "error": "failure",
             }),
         ),
+        (
+            "zerker.reason.release-authorization.v1.schema.json",
+            load_json("examples/release-authorization.json"),
+        ),
+        (
+            "zerker.reason.release-init.v1.schema.json",
+            json!({
+                "schema": RELEASE_INIT_SCHEMA,
+                "status": "created",
+                "path": "release.json",
+            }),
+        ),
     ];
 
     for (filename, instance) in cases {
@@ -162,6 +185,17 @@ fn entry_schemas_resolve_the_committed_catalog() {
             .unwrap();
         assert!(validator.is_valid(&instance), "{filename} did not resolve");
     }
+}
+
+#[test]
+fn shipped_release_input_matches_its_schema_and_rust_wire_type() {
+    let fixture = load_json("examples/release-authorization.json");
+    assert_valid("releaseAuthorizationInput", &fixture);
+    let wire: ReleaseAuthorizationInput = serde_json::from_value(fixture).unwrap();
+    assert_valid(
+        "releaseAuthorizationInput",
+        &serde_json::to_value(wire).unwrap(),
+    );
 }
 
 #[test]

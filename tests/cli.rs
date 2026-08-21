@@ -37,6 +37,8 @@ fn capabilities_json_is_complete_and_deterministic() {
                 "action": ["zerker.reason.action.v1"],
                 "authorization": ["zerker.reason.authorization.v1"],
                 "authorization_bundle": ["zerker.reason.authorization-bundle.v1"],
+                "release_authorization": ["zerker.reason.release-authorization.v1"],
+                "release_init": ["zerker.reason.release-init.v1"],
                 "verification": [
                     "zerker.reason.verification.v1",
                     "zerker.reason.verification.v2",
@@ -49,6 +51,7 @@ fn capabilities_json_is_complete_and_deterministic() {
                 "authorize",
                 "capabilities",
                 "check",
+                "release",
                 "validate",
                 "verify",
                 "verify-authorization",
@@ -609,6 +612,164 @@ fn authorization_json_has_a_stable_machine_contract() {
             .unwrap()
             .starts_with("sha256:")
     );
+}
+
+#[test]
+fn release_authorize_writes_a_verifiable_gateway_bundle() {
+    let directory = tempfile::tempdir().unwrap();
+    let request = directory.path().join("request.json");
+    let certificate = directory.path().join("certificate.json");
+    let bundle = directory.path().join("bundle.json");
+
+    let mut authorize = Command::cargo_bin("reason").unwrap();
+    authorize
+        .args([
+            "release",
+            "authorize",
+            "examples/release-authorization.json",
+            "--request-out",
+            request.to_str().unwrap(),
+            "--certificate-out",
+            certificate.to_str().unwrap(),
+            "--bundle-out",
+            bundle.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::starts_with(
+            "AUTHORIZED  action_deploy_150 via mission_release_150",
+        ));
+
+    assert!(request.is_file());
+    assert!(certificate.is_file());
+    let mut verify = Command::cargo_bin("reason").unwrap();
+    verify
+        .args([
+            "--format",
+            "json",
+            "verify-authorization-bundle",
+            bundle.to_str().unwrap(),
+            "--require-authorized",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "\"authorization_status\": \"authorized\"",
+        ));
+}
+
+#[test]
+fn release_authorize_rejects_aliased_or_existing_outputs() {
+    let directory = tempfile::tempdir().unwrap();
+    let shared = directory.path().join("shared.json");
+
+    let mut aliased = Command::cargo_bin("reason").unwrap();
+    aliased
+        .args([
+            "release",
+            "authorize",
+            "examples/release-authorization.json",
+            "--request-out",
+            shared.to_str().unwrap(),
+            "--bundle-out",
+            shared.to_str().unwrap(),
+        ])
+        .assert()
+        .code(1)
+        .stderr(predicate::str::contains("duplicate release output path"));
+    assert!(!shared.exists());
+
+    std::fs::write(&shared, "do not replace").unwrap();
+    let mut existing = Command::cargo_bin("reason").unwrap();
+    existing
+        .args([
+            "release",
+            "authorize",
+            "examples/release-authorization.json",
+            "--bundle-out",
+            shared.to_str().unwrap(),
+        ])
+        .assert()
+        .code(1)
+        .stderr(predicate::str::contains("release output already exists"));
+    assert_eq!(std::fs::read_to_string(shared).unwrap(), "do not replace");
+}
+
+#[test]
+fn release_init_uses_explicit_time_and_never_reads_the_clock() {
+    let directory = tempfile::tempdir().unwrap();
+    let output = directory.path().join("release.json");
+    let at = "2030-01-02T03:04:05Z";
+
+    let mut init = Command::cargo_bin("reason").unwrap();
+    init.args([
+        "release",
+        "init",
+        output.to_str().unwrap(),
+        "--evaluation-time",
+        at,
+    ])
+    .assert()
+    .success();
+
+    let value: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&output).unwrap()).unwrap();
+    assert_eq!(value["evaluation_time"], at);
+    assert_eq!(value["mission"]["issued_at"], at);
+    assert_eq!(value["release"]["proposed_at"], at);
+    assert!(value["mission"].get("valid_until").is_none());
+    assert_eq!(value["evidence"]["tests"], serde_json::json!([]));
+    assert_eq!(value["evidence"]["security_reviews"], serde_json::json!([]));
+    assert_eq!(value["evidence"]["artifacts"], serde_json::json!([]));
+    assert_eq!(value["evidence"]["approvals"], serde_json::json!([]));
+
+    let mut authorize = Command::cargo_bin("reason").unwrap();
+    authorize
+        .args(["release", "authorize", output.to_str().unwrap()])
+        .assert()
+        .code(2)
+        .stdout(predicate::str::starts_with("INSUFFICIENT_EVIDENCE"));
+}
+
+#[test]
+fn release_init_refuses_to_overwrite_without_force() {
+    let directory = tempfile::tempdir().unwrap();
+    let output = directory.path().join("release.json");
+    std::fs::write(&output, "keep me").unwrap();
+
+    let mut command = Command::cargo_bin("reason").unwrap();
+    command
+        .args([
+            "release",
+            "init",
+            output.to_str().unwrap(),
+            "--evaluation-time",
+            "2026-08-18T10:00:00Z",
+        ])
+        .assert()
+        .code(1)
+        .stderr(predicate::str::contains("already exists"));
+    assert_eq!(std::fs::read_to_string(output).unwrap(), "keep me");
+}
+
+#[test]
+fn release_authorize_fails_closed_when_approval_is_missing() {
+    let directory = tempfile::tempdir().unwrap();
+    let input = directory.path().join("release.json");
+    let mut value: serde_json::Value =
+        serde_json::from_slice(&std::fs::read("examples/release-authorization.json").unwrap())
+            .unwrap();
+    value["evidence"]["approvals"] = serde_json::json!([]);
+    std::fs::write(&input, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+
+    let mut command = Command::cargo_bin("reason").unwrap();
+    command
+        .args(["release", "authorize", input.to_str().unwrap()])
+        .assert()
+        .code(2)
+        .stdout(predicate::str::starts_with(
+            "INSUFFICIENT_EVIDENCE  action_deploy_150",
+        ));
 }
 
 #[test]

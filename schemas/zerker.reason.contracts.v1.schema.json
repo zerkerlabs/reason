@@ -426,6 +426,112 @@
       },
       "additionalProperties": false
     },
+    "releaseMission": {
+      "type": "object",
+      "required": ["id", "principal", "instruction_digest", "issued_at"],
+      "properties": {
+        "id": { "type": "string" },
+        "principal": { "type": "string" },
+        "instruction_digest": { "$ref": "#/$defs/digest" },
+        "issued_at": { "$ref": "#/$defs/timestamp" },
+        "valid_until": { "$ref": "#/$defs/timestamp" }
+      },
+      "additionalProperties": false
+    },
+    "releaseTarget": {
+      "type": "object",
+      "required": ["action_id", "tool", "version", "commit", "environment", "artifact_digest", "required_approver", "proposed_at"],
+      "properties": {
+        "action_id": { "type": "string" },
+        "tool": { "type": "string" },
+        "version": { "type": "string" },
+        "commit": { "type": "string" },
+        "environment": { "type": "string" },
+        "artifact_digest": { "$ref": "#/$defs/digest" },
+        "required_approver": { "type": "string" },
+        "proposed_at": { "$ref": "#/$defs/timestamp" }
+      },
+      "additionalProperties": false
+    },
+    "commitDecisionEvidence": {
+      "type": "object",
+      "required": ["id", "commit", "status", "authority", "observed_at"],
+      "properties": {
+        "id": { "type": "string" },
+        "commit": { "type": "string" },
+        "status": { "type": "string", "enum": ["passed", "failed"] },
+        "authority": { "type": "string" },
+        "observed_at": { "$ref": "#/$defs/timestamp" },
+        "valid_until": { "$ref": "#/$defs/timestamp" },
+        "supersedes": { "$ref": "#/$defs/stringArray" }
+      },
+      "additionalProperties": false
+    },
+    "artifactEvidence": {
+      "type": "object",
+      "required": ["id", "commit", "digest", "authority", "observed_at"],
+      "properties": {
+        "id": { "type": "string" },
+        "commit": { "type": "string" },
+        "digest": { "$ref": "#/$defs/digest" },
+        "authority": { "type": "string" },
+        "observed_at": { "$ref": "#/$defs/timestamp" },
+        "valid_until": { "$ref": "#/$defs/timestamp" },
+        "supersedes": { "$ref": "#/$defs/stringArray" }
+      },
+      "additionalProperties": false
+    },
+    "approvalEvidence": {
+      "type": "object",
+      "required": ["id", "version", "commit", "environment", "artifact_digest", "tool", "approver", "status", "authority", "observed_at"],
+      "properties": {
+        "id": { "type": "string" },
+        "version": { "type": "string" },
+        "commit": { "type": "string" },
+        "environment": { "type": "string" },
+        "artifact_digest": { "$ref": "#/$defs/digest" },
+        "tool": { "type": "string" },
+        "approver": { "type": "string" },
+        "status": { "type": "string", "enum": ["approved", "denied"] },
+        "authority": { "type": "string" },
+        "observed_at": { "$ref": "#/$defs/timestamp" },
+        "valid_until": { "$ref": "#/$defs/timestamp" },
+        "supersedes": { "$ref": "#/$defs/stringArray" }
+      },
+      "additionalProperties": false
+    },
+    "releaseEvidence": {
+      "type": "object",
+      "properties": {
+        "tests": { "type": "array", "items": { "$ref": "#/$defs/commitDecisionEvidence" } },
+        "security_reviews": { "type": "array", "items": { "$ref": "#/$defs/commitDecisionEvidence" } },
+        "artifacts": { "type": "array", "items": { "$ref": "#/$defs/artifactEvidence" } },
+        "approvals": { "type": "array", "items": { "$ref": "#/$defs/approvalEvidence" } }
+      },
+      "additionalProperties": false
+    },
+    "releaseAuthorizationInput": {
+      "type": "object",
+      "required": ["schema", "evaluation_time", "mission", "release"],
+      "properties": {
+        "schema": { "const": "zerker.reason.release-authorization.v1" },
+        "evaluation_time": { "$ref": "#/$defs/timestamp" },
+        "mission": { "$ref": "#/$defs/releaseMission" },
+        "release": { "$ref": "#/$defs/releaseTarget" },
+        "evidence": { "$ref": "#/$defs/releaseEvidence" }
+      },
+      "additionalProperties": false
+    },
+    "releaseInit": {
+      "type": "object",
+      "required": ["schema", "status", "path"],
+      "properties": {
+        "schema": { "const": "zerker.reason.release-init.v1" },
+        "status": { "const": "created" },
+        "path": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
     "error": {
       "type": "object",
       "required": ["schema", "status", "error"],

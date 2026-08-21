@@ -1,7 +1,8 @@
 use std::{
-    fs,
-    io::{self, Read},
-    path::PathBuf,
+    collections::BTreeSet,
+    fs::{self, OpenOptions},
+    io::{self, Read, Write},
+    path::{Path, PathBuf},
     process::ExitCode,
 };
 
@@ -19,7 +20,12 @@ use zerker_reason::{
         AuthorizationStatus, AuthorizationVerification, authorize, verify_authorization,
         verify_authorization_bundle,
     },
-    check, validate, verify,
+    check,
+    release::{
+        RELEASE_AUTHORIZATION_SCHEMA, RELEASE_INIT_SCHEMA, ReleaseAuthorizationInput,
+        compile_release_authorization,
+    },
+    validate, verify,
 };
 
 #[derive(Debug, Parser)]
@@ -74,6 +80,38 @@ enum Command {
         /// Return the authorization status exit code after successful verification.
         #[arg(long)]
         require_authorized: bool,
+    },
+    /// Build and evaluate the standard software-release authorization policy.
+    Release {
+        #[command(subcommand)]
+        command: ReleaseCommand,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum ReleaseCommand {
+    /// Write an editable release-authorization starter file.
+    Init {
+        output: PathBuf,
+        /// Explicit evaluation snapshot time (canonical UTC RFC 3339 seconds).
+        #[arg(long)]
+        evaluation_time: String,
+        /// Replace an existing output file.
+        #[arg(long)]
+        force: bool,
+    },
+    /// Compile release evidence into an exact action request and authorize it.
+    Authorize {
+        input: PathBuf,
+        /// Write the compiled generic action request.
+        #[arg(long)]
+        request_out: Option<PathBuf>,
+        /// Write the independently verifiable authorization certificate.
+        #[arg(long)]
+        certificate_out: Option<PathBuf>,
+        /// Write the request and certificate as one verifier bundle.
+        #[arg(long)]
+        bundle_out: Option<PathBuf>,
     },
 }
 
@@ -226,7 +264,187 @@ fn run(cli: &Cli) -> Result<ExitCode, Box<dyn std::error::Error>> {
                 Ok(ExitCode::SUCCESS)
             }
         }
+        Command::Release { command } => run_release(cli.format, command),
     }
+}
+
+fn run_release(
+    format: OutputFormat,
+    command: &ReleaseCommand,
+) -> Result<ExitCode, Box<dyn std::error::Error>> {
+    match command {
+        ReleaseCommand::Init {
+            output,
+            evaluation_time,
+            force,
+        } => {
+            let mut starter: ReleaseAuthorizationInput =
+                serde_json::from_str(include_str!("../examples/release-authorization.json"))?;
+            starter.evaluation_time = evaluation_time.clone();
+            starter.mission.issued_at = evaluation_time.clone();
+            starter.mission.valid_until = None;
+            starter.release.proposed_at = evaluation_time.clone();
+            // A starter must never carry fixture approvals or passing evidence.
+            // The unchanged file therefore fails closed until a caller adds
+            // evidence from authenticated and governed sources.
+            starter.evidence = Default::default();
+            let compiled = compile_release_authorization(&starter)?;
+            let _ = authorize(&compiled)?;
+            let bytes = pretty_json_bytes(&starter)?;
+            if *force {
+                fs::write(output, bytes)?;
+            } else {
+                write_output_set(vec![(output.clone(), bytes)])?;
+            }
+            match format {
+                OutputFormat::Text => {
+                    println!(
+                        "Release authorization starter written to {}",
+                        output.display()
+                    );
+                    println!(
+                        "Next: add governed evidence, then run reason release authorize {}",
+                        output.display()
+                    );
+                }
+                OutputFormat::Json => println!(
+                    "{}",
+                    serde_json::json!({
+                        "schema": RELEASE_INIT_SCHEMA,
+                        "status": "created",
+                        "path": output,
+                    })
+                ),
+            }
+            Ok(ExitCode::SUCCESS)
+        }
+        ReleaseCommand::Authorize {
+            input,
+            request_out,
+            certificate_out,
+            bundle_out,
+        } => {
+            let release: ReleaseAuthorizationInput = load(input)?;
+            let request = compile_release_authorization(&release)?;
+            let result = authorize(&request)?;
+            let bundle = AuthorizationBundle {
+                schema: AUTHORIZATION_BUNDLE_SCHEMA.to_owned(),
+                request: request.clone(),
+                certificate: result.clone(),
+            };
+            let mut outputs = Vec::new();
+            if let Some(path) = request_out {
+                outputs.push((path.clone(), pretty_json_bytes(&request)?));
+            }
+            if let Some(path) = certificate_out {
+                outputs.push((path.clone(), pretty_json_bytes(&result)?));
+            }
+            if let Some(path) = bundle_out {
+                outputs.push((path.clone(), pretty_json_bytes(&bundle)?));
+            }
+            write_output_set(outputs)?;
+            match format {
+                OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&result)?),
+                OutputFormat::Text => {
+                    print_authorization(&result, certificate_out.as_ref());
+                    if let Some(path) = request_out {
+                        println!(
+                            "Request written to {} ({ACTION_REQUEST_SCHEMA})",
+                            path.display()
+                        );
+                    }
+                    if let Some(path) = bundle_out {
+                        println!("Bundle written to {}", path.display());
+                        println!(
+                            "Next: reason verify-authorization-bundle {} --require-authorized",
+                            path.display()
+                        );
+                    }
+                }
+            }
+            Ok(authorization_exit_code(result.status))
+        }
+    }
+}
+
+fn pretty_json_bytes(value: &impl serde::Serialize) -> Result<Vec<u8>, serde_json::Error> {
+    let mut bytes = serde_json::to_vec_pretty(value)?;
+    bytes.push(b'\n');
+    Ok(bytes)
+}
+
+/// Stage every release artifact before publishing any of them. Hard links make
+/// each destination a create-if-absent operation, so aliases and partial writes
+/// cannot silently replace a different artifact.
+fn write_output_set(outputs: Vec<(PathBuf, Vec<u8>)>) -> Result<(), Box<dyn std::error::Error>> {
+    let mut identities = BTreeSet::new();
+    for (path, _) in &outputs {
+        let identity = output_identity(path)?;
+        if !identities.insert(identity) {
+            return Err(format!("duplicate release output path: {}", path.display()).into());
+        }
+        if path.exists() {
+            return Err(format!("release output already exists: {}", path.display()).into());
+        }
+    }
+
+    let mut staged = Vec::new();
+    for (index, (path, bytes)) in outputs.iter().enumerate() {
+        let parent = path
+            .parent()
+            .filter(|value| !value.as_os_str().is_empty())
+            .unwrap_or(Path::new("."));
+        let name = path
+            .file_name()
+            .ok_or_else(|| format!("release output has no file name: {}", path.display()))?;
+        let temporary = parent.join(format!(
+            ".{}.reason-stage-{}-{index}",
+            name.to_string_lossy(),
+            std::process::id()
+        ));
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temporary)?;
+        if let Err(error) = file.write_all(bytes).and_then(|()| file.sync_all()) {
+            let _ = fs::remove_file(&temporary);
+            for (staged_path, _) in &staged {
+                let _ = fs::remove_file(staged_path);
+            }
+            return Err(error.into());
+        }
+        staged.push((temporary, path.clone()));
+    }
+
+    let mut published = Vec::new();
+    for (temporary, destination) in &staged {
+        if let Err(error) = fs::hard_link(temporary, destination) {
+            for path in &published {
+                let _ = fs::remove_file(path);
+            }
+            for (staged_path, _) in &staged {
+                let _ = fs::remove_file(staged_path);
+            }
+            return Err(error.into());
+        }
+        published.push(destination.clone());
+    }
+    for (temporary, _) in staged {
+        fs::remove_file(temporary)?;
+    }
+    Ok(())
+}
+
+fn output_identity(path: &Path) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let parent = path
+        .parent()
+        .filter(|value| !value.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let canonical_parent = fs::canonicalize(parent)?;
+    let name = path
+        .file_name()
+        .ok_or_else(|| format!("release output has no file name: {}", path.display()))?;
+    Ok(canonical_parent.join(name))
 }
 
 const CAPABILITIES_SCHEMA: &str = "zerker.reason.capabilities.v1";
@@ -237,6 +455,7 @@ const COMMAND_NAMES: &[&str] = &[
     "authorize",
     "capabilities",
     "check",
+    "release",
     "validate",
     "verify",
     "verify-authorization",
@@ -295,6 +514,8 @@ struct CapabilitySchemaIdentifiers {
     action: &'static [&'static str],
     authorization: &'static [&'static str],
     authorization_bundle: &'static [&'static str],
+    release_authorization: &'static [&'static str],
+    release_init: &'static [&'static str],
     verification: &'static [&'static str],
     validation: &'static [&'static str],
     error: &'static [&'static str],
@@ -322,6 +543,8 @@ fn capabilities() -> Capabilities {
             action: &[ACTION_REQUEST_SCHEMA],
             authorization: &[AUTHORIZATION_RESULT_SCHEMA],
             authorization_bundle: &[AUTHORIZATION_BUNDLE_SCHEMA],
+            release_authorization: &[RELEASE_AUTHORIZATION_SCHEMA],
+            release_init: &[RELEASE_INIT_SCHEMA],
             verification: &[
                 VERIFICATION_SCHEMA,
                 VERIFICATION_SCHEMA_V2,
@@ -372,6 +595,17 @@ fn print_capabilities(capabilities: &Capabilities) {
             .schema_identifiers
             .authorization_bundle
             .join(" | ")
+    );
+    println!(
+        "  release authorization: {}",
+        capabilities
+            .schema_identifiers
+            .release_authorization
+            .join(" | ")
+    );
+    println!(
+        "  release init: {}",
+        capabilities.schema_identifiers.release_init.join(" | ")
     );
     println!(
         "  verification: {}",
