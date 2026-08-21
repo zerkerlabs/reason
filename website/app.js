@@ -14,7 +14,7 @@ function page() {
   return `<main class="zr-shell">
     <nav class="zr-nav">
       <div class="zr-brand">${mark()}<i></i><span>REASON</span></div>
-      <div class="zr-preview"><i></i> v0.2 release candidate</div>
+      <div class="zr-preview"><i></i> v0.2</div>
       <div class="zr-nav-links"><a href="https://zerker.ai/">Gateway</a><button type="button" data-zr-scroll="zr-how">How it works</button><button type="button" data-zr-scroll="zr-demo">Live demo</button></div>
     </nav>
 
@@ -89,7 +89,7 @@ function page() {
 
     <section class="zr-stack">
       <div><p>ONE JOB PER BOUNDARY</p><h2>Reason proves.<br>The stack does the rest.</h2></div>
-      <div><article><span>ZMEM</span><b>Supplies governed premises</b><small>GOVERNED EXPORT MERGED</small></article><article class="current"><span>REASON</span><b>Derives and verifies authorization</b><small>V0.2 RELEASE CANDIDATE</small></article><article><span>GATEWAY</span><b>Enforces the exact MCP call</b><small>INTEGRATION MERGED</small></article><article><span>RAKHSHAK</span><b>Binds process and destination</b><small>INTEGRATION MERGED</small></article><article><span>TREESHIP</span><b>Preserves verified decisions</b><small>VERIFY-THEN-SIGN PR OPEN</small></article></div>
+      <div><article><span>ZMEM</span><b>Supplies governed premises</b><small>GOVERNED EXPORT MERGED</small></article><article class="current"><span>REASON</span><b>Derives and verifies authorization</b><small>WORKING STANDALONE</small></article><article><span>GATEWAY</span><b>Enforces the exact MCP call</b><small>INTEGRATION MERGED</small></article><article><span>RAKHSHAK</span><b>Binds process and destination</b><small>INTEGRATION MERGED</small></article><article><span>TREESHIP</span><b>Preserves verified decisions</b><small>VERIFY-THEN-SIGN PR OPEN</small></article></div>
     </section>
 
     <section class="zr-start"><div><p>RUN IT LOCALLY</p><h2>Proof in two commands.</h2><span>No daemon, network, account, wall clock, or LLM.</span></div><pre><i>$</i> reason authorize deploy.json \
