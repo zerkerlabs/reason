@@ -32,6 +32,8 @@ Reason therefore:
 - independently verifies proof structure rather than trusting the original solver result;
 - does not read ambient wall-clock time during a check.
 
+The mutation-security suite changes every serialized leaf across authorized, insufficient-evidence, denied, conflicted, expired, Gateway-bound, and Rakhshak-bound fixtures. A changed typed value must either fail parsing or invalidate independent verification. It also injects unknown members throughout typed bundle objects and requires the CLI to reject them. This is deterministic regression coverage, not a proof that every possible implementation bug is absent.
+
 ## Trust boundaries
 
 - ZMem is responsible for premise governance and human promotion.
