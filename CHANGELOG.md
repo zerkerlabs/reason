@@ -2,18 +2,29 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-21
+
 ### Added
 
+- Publish Draft 2020-12 schemas for stable action, authorization, bundle, verification, error, and release-safety wire values.
+- Report deterministic supported schemas, commands, statuses, exit codes, and limits with `reason --format json capabilities`.
+- Ship a portable authorization conformance corpus with committed request and reasoning-result digests.
+- Exercise every serialized request, certificate, and release-input leaf through deterministic mutation-security tests.
+- Define explicit Gateway, Rakhshak, Treeship, and ZMem integration profiles without adding downstream semantics to Reason core.
 - Compile a product-level release-safety input into an exact deployment authorization with `reason release init` and `reason release authorize`.
 - Emit the compiled request, certificate, and atomic Gateway-ready bundle from one release command.
 - Verify an action request and authorization certificate atomically from one versioned JSON bundle, including standard input for subprocess integrations.
 - Optionally preserve fail-closed authorization exit codes after successful bundle verification.
+- Build release archives for Linux arm64 in addition to Linux x86_64 and macOS arm64/x86_64.
 
 ### Changed
 
 - Cap every CLI JSON input at 64 MiB.
 - Reject duplicate JSON object members recursively instead of accepting last-value-wins map entries.
 - Reject unrecognized members in versioned CLI JSON schemas instead of silently discarding unsigned semantics.
+- Return exit code 1 for invalid CLI usage so it cannot collide with exit code 2 for unknown or insufficient evidence.
+- Keep `reason release init` starters empty of positive evidence so unchanged starters fail closed.
+- Stage and verify every release archive before publishing a draft GitHub release.
 
 ## [0.1.0] - 2026-08-17
 

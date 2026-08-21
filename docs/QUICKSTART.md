@@ -6,11 +6,11 @@ This walkthrough checks whether an AI agent may deploy one exact commit to produ
 
 ### Download a release binary
 
-Download the archive for your platform from the [`v0.1.0` release](https://github.com/zerkerlabs/reason/releases/tag/v0.1.0), then verify its checksum:
+Download the archive and matching checksum for your platform from the [latest published release](https://github.com/zerkerlabs/reason/releases/latest), then verify it before extracting:
 
 ```bash
-shasum -a 256 -c zerker-reason-v0.1.0-*.tar.gz.sha256
-tar -xzf zerker-reason-v0.1.0-*.tar.gz
+shasum -a 256 -c zerker-reason-v*.tar.gz.sha256
+tar -xzf zerker-reason-v*.tar.gz
 install -m 0755 reason ~/.local/bin/reason
 reason --version
 ```
@@ -19,7 +19,8 @@ Release archives are produced for:
 
 - macOS arm64;
 - macOS x86_64;
-- Linux x86_64.
+- Linux x86_64;
+- Linux arm64.
 
 ### Build from source
 

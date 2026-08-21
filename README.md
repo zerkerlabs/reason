@@ -212,4 +212,4 @@ Zerker Reason is an independent reasoning service:
 - **Guard** enforces actions after reasoning.
 - **Treeship** records premise, ruleset, result, and proof commitments.
 
-See [`docs/QUICKSTART.md`](docs/QUICKSTART.md), [`docs/PRODUCT.md`](docs/PRODUCT.md), [`docs/EXPERIENCE.md`](docs/EXPERIENCE.md), [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md), [`docs/AUTHORITY.md`](docs/AUTHORITY.md), [`docs/TRUTH.md`](docs/TRUTH.md), [`docs/TEMPORAL.md`](docs/TEMPORAL.md), [`docs/ACTIONS.md`](docs/ACTIONS.md), [`docs/PROOFS.md`](docs/PROOFS.md), [`docs/INTEGRATION_PROFILES.md`](docs/INTEGRATION_PROFILES.md), and [`docs/TREESHIP.md`](docs/TREESHIP.md).
+See [`docs/QUICKSTART.md`](docs/QUICKSTART.md), [`docs/MIGRATING-0.2.md`](docs/MIGRATING-0.2.md), [`docs/PRODUCT.md`](docs/PRODUCT.md), [`docs/EXPERIENCE.md`](docs/EXPERIENCE.md), [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md), [`docs/AUTHORITY.md`](docs/AUTHORITY.md), [`docs/TRUTH.md`](docs/TRUTH.md), [`docs/TEMPORAL.md`](docs/TEMPORAL.md), [`docs/ACTIONS.md`](docs/ACTIONS.md), [`docs/PROOFS.md`](docs/PROOFS.md), [`docs/INTEGRATION_PROFILES.md`](docs/INTEGRATION_PROFILES.md), and [`docs/TREESHIP.md`](docs/TREESHIP.md).
