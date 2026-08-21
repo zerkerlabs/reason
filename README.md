@@ -131,6 +131,16 @@ VERIFIED  release_ready(1.4.0, commit_abc)
 
 Verification does not rerun forward chaining or trust the original check result. It independently checks the ontology digest, query, proof and disproof digests, node identities, fact sources and authorities, rule substitutions, conclusions, conflict witness, reachability, and absence of derivation cycles.
 
+## Discover binary capabilities
+
+Inspect deliberate compatibility data before sending a request:
+
+```bash
+cargo run -- --format json capabilities
+```
+
+The deterministic `zerker.reason.capabilities.v1` response declares the binary version, supported wire identifiers, commands, all public output statuses, exit-code meanings, and 64 MiB CLI input limit. It contains no host paths, environment values, ambient time, network state, or build-machine details. See [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md).
+
 ## For agents
 
 Use deterministic JSON over stdin:
@@ -158,6 +168,8 @@ The response uses `zerker.reason.result.v1` for non-temporal programs and `zerke
 
 No network, account, daemon, or LLM is required for the symbolic check.
 
+Draft 2020-12 wire-shape schemas for the stable authorization values are in [`schemas/`](schemas/README.md). Schema validation is structural; use Reason itself for semantic authorization verification.
+
 ## Security status
 
 Zerker Reason is pre-release software. Read [`SECURITY.md`](SECURITY.md) before using it near production actions. A valid authorization certificate still requires an independent enforcement layer to bind execution to the exact certified action.
@@ -181,4 +193,4 @@ Zerker Reason is an independent reasoning service:
 - **Guard** enforces actions after reasoning.
 - **Treeship** records premise, ruleset, result, and proof commitments.
 
-See [`docs/QUICKSTART.md`](docs/QUICKSTART.md), [`docs/PRODUCT.md`](docs/PRODUCT.md), [`docs/EXPERIENCE.md`](docs/EXPERIENCE.md), [`docs/AUTHORITY.md`](docs/AUTHORITY.md), [`docs/TRUTH.md`](docs/TRUTH.md), [`docs/TEMPORAL.md`](docs/TEMPORAL.md), [`docs/ACTIONS.md`](docs/ACTIONS.md), [`docs/PROOFS.md`](docs/PROOFS.md), [`docs/INTEGRATION_PROFILES.md`](docs/INTEGRATION_PROFILES.md), and [`docs/TREESHIP.md`](docs/TREESHIP.md).
+See [`docs/QUICKSTART.md`](docs/QUICKSTART.md), [`docs/PRODUCT.md`](docs/PRODUCT.md), [`docs/EXPERIENCE.md`](docs/EXPERIENCE.md), [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md), [`docs/AUTHORITY.md`](docs/AUTHORITY.md), [`docs/TRUTH.md`](docs/TRUTH.md), [`docs/TEMPORAL.md`](docs/TEMPORAL.md), [`docs/ACTIONS.md`](docs/ACTIONS.md), [`docs/PROOFS.md`](docs/PROOFS.md), [`docs/INTEGRATION_PROFILES.md`](docs/INTEGRATION_PROFILES.md), and [`docs/TREESHIP.md`](docs/TREESHIP.md).

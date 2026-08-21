@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "zerker.reason.error.v1.schema.json",
+  "title": "zerker.reason.error.v1",
+  "description": "Wire shape for Reason CLI JSON errors.",
+  "$ref": "zerker.reason.contracts.v1.schema.json#/$defs/error"
+}
