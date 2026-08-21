@@ -13,6 +13,9 @@
       ? 'Guard'
       : 'Gateway';
   const uid = `zk-products-${Math.random().toString(36).slice(2, 9)}`;
+  const productBase = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)
+    ? window.location.origin
+    : 'https://zerker.ai';
 
   const family = document.createElement('div');
   family.className = 'zk-product-family';
@@ -55,17 +58,17 @@
       </button>
     </div>
     <div class="zk-product-list">
-      <a class="zk-product-row" href="/" data-product="Gateway">
+      <a class="zk-product-row" href="${productBase}/" data-product="Gateway">
         <span class="zk-product-icon zk-product-icon--gateway" aria-hidden="true"></span>
         <span class="zk-product-copy"><strong>Gateway</strong><small>Route and govern agent traffic</small></span>
         <span class="zk-product-state">Available</span>
       </a>
-      <a class="zk-product-row" href="/reason" data-product="Reason">
+      <a class="zk-product-row" href="${productBase}/reason" data-product="Reason">
         <span class="zk-product-icon zk-product-icon--reason" aria-hidden="true">∴</span>
         <span class="zk-product-copy"><strong>Reason</strong><small>Verify exact actions before execution</small></span>
         <span class="zk-product-state">v0.2</span>
       </a>
-      <a class="zk-product-row" href="/guard" data-product="Guard">
+      <a class="zk-product-row" href="${productBase}/guard" data-product="Guard">
         <span class="zk-product-icon zk-product-icon--guard" aria-hidden="true">G</span>
         <span class="zk-product-copy"><strong>Guard</strong><small>Control agent egress on-device</small></span>
         <span class="zk-product-state">macOS</span>
