@@ -2,6 +2,8 @@
 
 Zerker Reason proves whether an exact action is authorized. Treeship preserves the resulting certificate as signed evidence.
 
+For an enforcement-grade verify-then-sign boundary, use the dedicated atomic adapter described in [Integration profiles](INTEGRATION_PROFILES.md), when supported by the installed Treeship version. The compatibility flow below invokes the verifiers separately and demonstrates certificate preservation; it is not a substitute for an adapter that consumes one bundle and gates signing on Reason success.
+
 The verifiers answer different questions:
 
 - `reason verify-authorization` checks the reasoning semantics, request binding, proof, authority policy, and temporal snapshot.
@@ -30,7 +32,7 @@ The script:
 
 The receipt uses `system://zerker-reason` as a producer label. The label is not an identity claim unless a verifier separately trusts the Treeship signing key associated with it.
 
-## Manual flow
+## Manual compatibility flow
 
 ```bash
 reason authorize action-request.json --certificate-out authorization.json
@@ -46,5 +48,7 @@ treeship attest receipt \
 
 treeship verify last --full
 ```
+
+The generic receipt command does not invoke Reason. Between separate commands, protect the request and certificate paths from mutation and never present this compatibility flow as atomic verify-before-sign.
 
 Use private artifact storage when certificates contain sensitive facts. Digest-only commitments and selective disclosure are future work; the v1 receipt carries the complete certificate.

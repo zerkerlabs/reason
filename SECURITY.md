@@ -40,7 +40,7 @@ Reason therefore:
 - Treeship is responsible for signer, byte commitment, and artifact-chain verification.
 - Gateway is responsible for caller authentication, tenant isolation, and routing.
 
-A Treeship signature does not prove Reason semantics. A valid Reason certificate does not prove that Guard enforced it. Production systems must run the relevant verifiers at each boundary.
+A Treeship signature does not prove Reason semantics. A valid Reason certificate does not prove that Guard enforced it. Production systems must run the relevant verifiers at each boundary. The [integration profiles](docs/INTEGRATION_PROFILES.md) define those responsibility splits without adding downstream semantics to Reason core.
 
 ## Out of scope for v0.1
 
