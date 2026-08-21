@@ -2,6 +2,137 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 
 #[test]
+fn capabilities_json_is_complete_and_deterministic() {
+    let first_directory = tempfile::tempdir().unwrap();
+    let second_directory = tempfile::tempdir().unwrap();
+
+    let run = |directory: &std::path::Path, home: &str| {
+        let mut command = Command::cargo_bin("reason").unwrap();
+        command
+            .current_dir(directory)
+            .env("HOME", home)
+            .env("REASON_TEST_HOST_VALUE", "must-not-leak")
+            .args(["--format", "json", "capabilities"])
+            .assert()
+            .success()
+            .get_output()
+            .stdout
+            .clone()
+    };
+
+    let first = run(first_directory.path(), "/tmp/reason-capabilities-first");
+    let second = run(second_directory.path(), "/tmp/reason-capabilities-second");
+    assert_eq!(first, second);
+
+    let value: serde_json::Value = serde_json::from_slice(&first).unwrap();
+    assert_eq!(
+        value,
+        serde_json::json!({
+            "schema": "zerker.reason.capabilities.v1",
+            "binary_version": env!("CARGO_PKG_VERSION"),
+            "schema_identifiers": {
+                "capabilities": ["zerker.reason.capabilities.v1"],
+                "program": ["zerker.reason.program.v1", "zerker.reason.program.v2"],
+                "result": ["zerker.reason.result.v1", "zerker.reason.result.v2"],
+                "action": ["zerker.reason.action.v1"],
+                "authorization": ["zerker.reason.authorization.v1"],
+                "authorization_bundle": ["zerker.reason.authorization-bundle.v1"],
+                "release_authorization": ["zerker.reason.release-authorization.v1"],
+                "release_init": ["zerker.reason.release-init.v1"],
+                "verification": [
+                    "zerker.reason.verification.v1",
+                    "zerker.reason.verification.v2",
+                    "zerker.reason.authorization-verification.v1"
+                ],
+                "validation": ["zerker.reason.validation.v1"],
+                "error": ["zerker.reason.error.v1"]
+            },
+            "commands": [
+                "authorize",
+                "capabilities",
+                "check",
+                "release",
+                "validate",
+                "verify",
+                "verify-authorization",
+                "verify-authorization-bundle"
+            ],
+            "reasoning_statuses": ["proved", "unknown", "disproved", "inconsistent"],
+            "authorization_statuses": [
+                "authorized",
+                "insufficient_evidence",
+                "denied",
+                "conflicted"
+            ],
+            "validation_statuses": ["valid"],
+            "verification_statuses": ["verified"],
+            "error_statuses": ["error"],
+            "exit_codes": [
+                {"code": 0, "meaning": "success_or_proved_or_authorized"},
+                {"code": 1, "meaning": "invalid_input_command_usage_engine_or_verification_failure"},
+                {"code": 2, "meaning": "unknown_or_insufficient_evidence"},
+                {"code": 3, "meaning": "disproved_or_denied"},
+                {"code": 4, "meaning": "inconsistent_or_conflicted"}
+            ],
+            "limits": {"max_cli_input_bytes": 67_108_864}
+        })
+    );
+}
+
+#[test]
+fn capabilities_text_is_concise_and_requires_no_input() {
+    let mut command = Command::cargo_bin("reason").unwrap();
+    command
+        .arg("capabilities")
+        .write_stdin("ignored host input")
+        .assert()
+        .success()
+        .stdout(predicate::str::starts_with(format!(
+            "REASON {} CAPABILITIES\n",
+            env!("CARGO_PKG_VERSION")
+        )))
+        .stdout(predicate::str::contains(
+            "Statuses: proved | unknown | disproved | inconsistent",
+        ))
+        .stdout(predicate::str::contains(
+            "Authorization: authorized | insufficient_evidence | denied | conflicted",
+        ))
+        .stdout(predicate::str::contains(
+            "Other outcomes: validation valid | verification verified | error error",
+        ))
+        .stdout(predicate::str::contains(
+            "Input limit: 67108864 bytes (64 MiB)",
+        ))
+        .stdout(predicate::str::contains("/tmp").not());
+}
+
+#[test]
+fn capabilities_rejects_undeclared_arguments() {
+    let mut command = Command::cargo_bin("reason").unwrap();
+    command
+        .args(["capabilities", "unexpected.json"])
+        .assert()
+        .code(1)
+        .stderr(predicate::str::contains("unexpected argument"));
+}
+
+#[test]
+fn cli_usage_errors_do_not_collide_with_fail_closed_outcome_codes() {
+    let mut invalid = Command::cargo_bin("reason").unwrap();
+    invalid
+        .arg("unsupported-command")
+        .assert()
+        .code(1)
+        .stderr(predicate::str::contains("unrecognized subcommand"));
+
+    let mut help = Command::cargo_bin("reason").unwrap();
+    help.arg("--help").assert().success();
+
+    let mut version = Command::cargo_bin("reason").unwrap();
+    version.arg("--version").assert().success();
+}
+
+#[test]
 fn human_output_leads_with_the_decision() {
     let mut command = Command::cargo_bin("reason").unwrap();
     command
@@ -587,12 +718,17 @@ fn release_init_uses_explicit_time_and_never_reads_the_clock() {
     assert_eq!(value["mission"]["issued_at"], at);
     assert_eq!(value["release"]["proposed_at"], at);
     assert!(value["mission"].get("valid_until").is_none());
+    assert_eq!(value["evidence"]["tests"], serde_json::json!([]));
+    assert_eq!(value["evidence"]["security_reviews"], serde_json::json!([]));
+    assert_eq!(value["evidence"]["artifacts"], serde_json::json!([]));
+    assert_eq!(value["evidence"]["approvals"], serde_json::json!([]));
 
     let mut authorize = Command::cargo_bin("reason").unwrap();
     authorize
         .args(["release", "authorize", output.to_str().unwrap()])
         .assert()
-        .success();
+        .code(2)
+        .stdout(predicate::str::starts_with("INSUFFICIENT_EVIDENCE"));
 }
 
 #[test]

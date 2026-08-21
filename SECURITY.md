@@ -32,6 +32,8 @@ Reason therefore:
 - independently verifies proof structure rather than trusting the original solver result;
 - does not read ambient wall-clock time during a check.
 
+The mutation-security suite changes every serialized leaf across authorized, insufficient-evidence, denied, conflicted, expired, Gateway-bound, and Rakhshak-bound fixtures. A changed typed value must either fail parsing or invalidate independent verification. It also injects unknown members throughout typed bundle objects and requires the CLI to reject them. This is deterministic regression coverage, not a proof that every possible implementation bug is absent.
+
 ## Trust boundaries
 
 - ZMem is responsible for premise governance and human promotion.
@@ -40,7 +42,7 @@ Reason therefore:
 - Treeship is responsible for signer, byte commitment, and artifact-chain verification.
 - Gateway is responsible for caller authentication, tenant isolation, and routing.
 
-A Treeship signature does not prove Reason semantics. A valid Reason certificate does not prove that Guard enforced it. Production systems must run the relevant verifiers at each boundary.
+A Treeship signature does not prove Reason semantics. A valid Reason certificate does not prove that Guard enforced it. Production systems must run the relevant verifiers at each boundary. The [integration profiles](docs/INTEGRATION_PROFILES.md) define those responsibility splits without adding downstream semantics to Reason core.
 
 ## Out of scope for v0.1
 

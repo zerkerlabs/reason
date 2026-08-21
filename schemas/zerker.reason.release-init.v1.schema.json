@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "zerker.reason.release-init.v1.schema.json",
+  "title": "zerker.reason.release-init.v1",
+  "description": "Wire shape for a successful release-safety starter creation result.",
+  "$ref": "zerker.reason.contracts.v1.schema.json#/$defs/releaseInit"
+}

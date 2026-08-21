@@ -1,0 +1,622 @@
+{
+  "certificate": {
+    "action": {
+      "arguments": {
+        "expires_at": "2026-08-14T12:04:00Z",
+        "host": "api.example.com",
+        "nonce": "nonce_0123456789abcdef",
+        "not_before": "2026-08-14T12:00:00Z",
+        "port": 443,
+        "remote_ip": "203.0.113.10",
+        "schema": "zerker.rakhshak.network-grant.v1",
+        "session_id": "gsess_42_100_20",
+        "transport": "tcp"
+      },
+      "digest": "sha256:62e2c017b1d978b15166928d48ad611b5b1b9554efca27ca972beaac6fc2c2f0",
+      "effects": [
+        {
+          "kind": "network_connect",
+          "resource": "tcp://203.0.113.10:443"
+        }
+      ],
+      "id": "action_deploy_140",
+      "tool": "rakhshak.network.connect"
+    },
+    "issues": [],
+    "mission": {
+      "digest": "sha256:bd9f1fee10ccf478aebe3900b9879c835c04f009f8f8b74b4fbef3882ff4a85d",
+      "id": "mission_release_140"
+    },
+    "reasoning": {
+      "assumptions": [
+        "Only facts admitted by the explicit authority policy participate in inference.",
+        "Explicit negation does not use absence as evidence of falsity.",
+        "Contradictory support is preserved as inconsistent instead of resolved silently."
+      ],
+      "authority": {
+        "admitted_fact_ids": [
+          "fact_approval_140",
+          "fact_review_abc",
+          "fact_tests_abc",
+          "zerker.action.binding.action.argument.08788ba12ad14dc72cec18b90bbd0a4d7fd35f44fbddb4a1793843cfe9a96d85",
+          "zerker.action.binding.action.argument.26095d51ab642092db1116155841bf0ca3f13035cfee7891d96ba7aa20cb0113",
+          "zerker.action.binding.action.argument.30db2073735bf1d39c0fa5a1279ae4c2cf9448bddf15631b23d3b647408a2f53",
+          "zerker.action.binding.action.argument.3e7cd76034615e782f63aac05ca1e897fdcca0f72afe0a9670f6c00d052f0473",
+          "zerker.action.binding.action.argument.4f403beea6719d4381fd270410d0291edc388beaee5d56f731c860d14156e31a",
+          "zerker.action.binding.action.argument.571e5bd1a6e4b8239467e1ad26ce140be15f0c149b373ff4a59988a0e2d3a5de",
+          "zerker.action.binding.action.argument.8e6e4bca7c6cab983bb404288ba8aba560e2d077d10f0e06c90973621ca9932f",
+          "zerker.action.binding.action.argument.e54a8dc33e20b89a246bf84eab9145436752fe3bdb46b3fc8da8ed48647e063a",
+          "zerker.action.binding.action.argument.f4a506ae95d681df1f9535584ec5f45e5283b43c5e334355f7508107577a1bb1",
+          "zerker.action.binding.action.effect.0000",
+          "zerker.action.binding.action.tool",
+          "zerker.action.binding.mission.action",
+          "zerker.action.binding.mission.active",
+          "zerker.action.binding.mission.constraint.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+          "zerker.action.binding.mission.constraint.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+          "zerker.action.binding.mission.constraint.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+          "zerker.action.binding.mission.instruction",
+          "zerker.action.binding.mission.principal"
+        ],
+        "policy_digest": "sha256:1d8f4910513651308852a74cf5722e55b02e82132a6600bed51e4956c1035413",
+        "withheld": []
+      },
+      "conflict": null,
+      "disproof": null,
+      "metrics": {
+        "facts_admitted": 21,
+        "facts_derived": 1,
+        "facts_supplied": 21,
+        "facts_withheld": 0,
+        "rounds": 2,
+        "rules_evaluated": 2
+      },
+      "missing": [],
+      "ontology": {
+        "digest": "sha256:517d7e2aa824a94ad2448867716ba0a9c9fe3f584156ebe2c6ff8af50fd0aa32",
+        "id": "software-release-authorization",
+        "version": "0.1.0"
+      },
+      "program_digest": "sha256:189abdd4ce38c0db7f2b1470f3588fc9e4a0a36723cc1d21785c339e1986d8df",
+      "proof": {
+        "digest": "sha256:ce3e9f170a6b2a0155f27197b697c756fddfb7f2a1d2e59064cf9d748d6715b5",
+        "nodes": [
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_140",
+                "port",
+                "number:443"
+              ],
+              "predicate": "action_argument"
+            },
+            "authority": "system-bound",
+            "id": "node_1eab9982467030e587abd9f3ae546a557a79aa359bc4724277bb073081003b5e",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.action.argument.4f403beea6719d4381fd270410d0291edc388beaee5d56f731c860d14156e31a",
+            "temporal": {
+              "observed_at": "2026-08-14T12:00:00Z"
+            }
+          },
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_140",
+                "nonce",
+                "nonce_0123456789abcdef"
+              ],
+              "predicate": "action_argument"
+            },
+            "authority": "system-bound",
+            "id": "node_2743615d706b11901639c43b293b4d1b948b741be67795af0d8b108f67c475cd",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.action.argument.3e7cd76034615e782f63aac05ca1e897fdcca0f72afe0a9670f6c00d052f0473",
+            "temporal": {
+              "observed_at": "2026-08-14T12:00:00Z"
+            }
+          },
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_140"
+              ],
+              "predicate": "action_authorized"
+            },
+            "id": "node_32037204f9b4cfcf4677b748f35904e5739d4a192138c75bee7b58ff35232c78",
+            "kind": "derivation",
+            "premises": [
+              "node_9d35e6abeb868e84a09160d3c84a9a25088c7f6ce155bde635dbbba6a84c0f45",
+              "node_e65c02755142f8b770e92669e316706b43b4f3ed89513b26ba5ecfccd6fa4a09",
+              "node_338e07b23d403e509aae3f8772ec81002dcd6fbab9ef5bd3bd477e353f7abcb5",
+              "node_b32920d6f871bd5ac8a9a5a1e0e18bff30a3d63c206f0eed059950b70d72938f",
+              "node_2743615d706b11901639c43b293b4d1b948b741be67795af0d8b108f67c475cd",
+              "node_672c521b40f50e6451bc084210540a911595d0927c4217b100664f0e479b08a7",
+              "node_9af3d6abba71cf1926918c21d87b95bcd5ba6f362522c12c306817ac4f91dc5d",
+              "node_bf03450bba79b2491543e1b1b734a94410c776fbfbb24642ed2180c79097b678",
+              "node_53ff63369ba631852f4aa6805416665ada9f4e63966d8958c38634294d4e2964",
+              "node_1eab9982467030e587abd9f3ae546a557a79aa359bc4724277bb073081003b5e",
+              "node_61b9de09a8685469ee593e29b9c08bed64cbfe5ed442f469f08a3e87445faf34",
+              "node_5bad1ad1950cbcd8dbdb47365913c28d38e9c6bcc4d36684e5e9881e6b1277b5",
+              "node_845ee1496ea9dc042259a7d4f020e618f3af5240a7ba2919244cc0d10d6ec193"
+            ],
+            "source_id": "authorize_exact_rakhshak_destination"
+          },
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_140",
+                "rakhshak.network.connect"
+              ],
+              "predicate": "action_tool"
+            },
+            "authority": "system-bound",
+            "id": "node_338e07b23d403e509aae3f8772ec81002dcd6fbab9ef5bd3bd477e353f7abcb5",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.action.tool",
+            "temporal": {
+              "observed_at": "2026-08-14T12:00:00Z"
+            }
+          },
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_140",
+                "remote_ip",
+                "203.0.113.10"
+              ],
+              "predicate": "action_argument"
+            },
+            "authority": "system-bound",
+            "id": "node_53ff63369ba631852f4aa6805416665ada9f4e63966d8958c38634294d4e2964",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.action.argument.30db2073735bf1d39c0fa5a1279ae4c2cf9448bddf15631b23d3b647408a2f53",
+            "temporal": {
+              "observed_at": "2026-08-14T12:00:00Z"
+            }
+          },
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_140",
+                "expires_at",
+                "2026-08-14T12:04:00Z"
+              ],
+              "predicate": "action_argument"
+            },
+            "authority": "system-bound",
+            "id": "node_5bad1ad1950cbcd8dbdb47365913c28d38e9c6bcc4d36684e5e9881e6b1277b5",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.action.argument.08788ba12ad14dc72cec18b90bbd0a4d7fd35f44fbddb4a1793843cfe9a96d85",
+            "temporal": {
+              "observed_at": "2026-08-14T12:00:00Z"
+            }
+          },
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_140",
+                "not_before",
+                "2026-08-14T12:00:00Z"
+              ],
+              "predicate": "action_argument"
+            },
+            "authority": "system-bound",
+            "id": "node_61b9de09a8685469ee593e29b9c08bed64cbfe5ed442f469f08a3e87445faf34",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.action.argument.571e5bd1a6e4b8239467e1ad26ce140be15f0c149b373ff4a59988a0e2d3a5de",
+            "temporal": {
+              "observed_at": "2026-08-14T12:00:00Z"
+            }
+          },
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_140",
+                "session_id",
+                "gsess_42_100_20"
+              ],
+              "predicate": "action_argument"
+            },
+            "authority": "system-bound",
+            "id": "node_672c521b40f50e6451bc084210540a911595d0927c4217b100664f0e479b08a7",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.action.argument.f4a506ae95d681df1f9535584ec5f45e5283b43c5e334355f7508107577a1bb1",
+            "temporal": {
+              "observed_at": "2026-08-14T12:00:00Z"
+            }
+          },
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_140",
+                "network_connect",
+                "tcp://203.0.113.10:443",
+                "none:"
+              ],
+              "predicate": "action_effect"
+            },
+            "authority": "system-bound",
+            "id": "node_845ee1496ea9dc042259a7d4f020e618f3af5240a7ba2919244cc0d10d6ec193",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.action.effect.0000",
+            "temporal": {
+              "observed_at": "2026-08-14T12:00:00Z"
+            }
+          },
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_140",
+                "transport",
+                "tcp"
+              ],
+              "predicate": "action_argument"
+            },
+            "authority": "system-bound",
+            "id": "node_9af3d6abba71cf1926918c21d87b95bcd5ba6f362522c12c306817ac4f91dc5d",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.action.argument.8e6e4bca7c6cab983bb404288ba8aba560e2d077d10f0e06c90973621ca9932f",
+            "temporal": {
+              "observed_at": "2026-08-14T12:00:00Z"
+            }
+          },
+          {
+            "atom": {
+              "arguments": [
+                "mission_release_140"
+              ],
+              "predicate": "mission_active"
+            },
+            "authority": "system-bound",
+            "id": "node_9d35e6abeb868e84a09160d3c84a9a25088c7f6ce155bde635dbbba6a84c0f45",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.mission.active",
+            "temporal": {
+              "observed_at": "2026-08-14T10:00:00Z",
+              "valid_until": "2026-08-14T18:00:00Z"
+            }
+          },
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_140",
+                "schema",
+                "zerker.rakhshak.network-grant.v1"
+              ],
+              "predicate": "action_argument"
+            },
+            "authority": "system-bound",
+            "id": "node_b32920d6f871bd5ac8a9a5a1e0e18bff30a3d63c206f0eed059950b70d72938f",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.action.argument.e54a8dc33e20b89a246bf84eab9145436752fe3bdb46b3fc8da8ed48647e063a",
+            "temporal": {
+              "observed_at": "2026-08-14T12:00:00Z"
+            }
+          },
+          {
+            "atom": {
+              "arguments": [
+                "action_deploy_140",
+                "host",
+                "api.example.com"
+              ],
+              "predicate": "action_argument"
+            },
+            "authority": "system-bound",
+            "id": "node_bf03450bba79b2491543e1b1b734a94410c776fbfbb24642ed2180c79097b678",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.action.argument.26095d51ab642092db1116155841bf0ca3f13035cfee7891d96ba7aa20cb0113",
+            "temporal": {
+              "observed_at": "2026-08-14T12:00:00Z"
+            }
+          },
+          {
+            "atom": {
+              "arguments": [
+                "mission_release_140",
+                "action_deploy_140"
+              ],
+              "predicate": "mission_action"
+            },
+            "authority": "system-bound",
+            "id": "node_e65c02755142f8b770e92669e316706b43b4f3ed89513b26ba5ecfccd6fa4a09",
+            "kind": "fact",
+            "premises": [],
+            "source_id": "zerker.action.binding.mission.action",
+            "temporal": {
+              "observed_at": "2026-08-14T12:00:00Z",
+              "valid_until": "2026-08-14T18:00:00Z"
+            }
+          }
+        ],
+        "root": "node_32037204f9b4cfcf4677b748f35904e5739d4a192138c75bee7b58ff35232c78"
+      },
+      "query": {
+        "arguments": [
+          "action_deploy_140"
+        ],
+        "predicate": "action_authorized"
+      },
+      "schema": "zerker.reason.result.v2",
+      "status": "proved",
+      "temporal": {
+        "eligible_fact_ids": [
+          "fact_approval_140",
+          "fact_review_abc",
+          "fact_tests_abc",
+          "zerker.action.binding.action.argument.08788ba12ad14dc72cec18b90bbd0a4d7fd35f44fbddb4a1793843cfe9a96d85",
+          "zerker.action.binding.action.argument.26095d51ab642092db1116155841bf0ca3f13035cfee7891d96ba7aa20cb0113",
+          "zerker.action.binding.action.argument.30db2073735bf1d39c0fa5a1279ae4c2cf9448bddf15631b23d3b647408a2f53",
+          "zerker.action.binding.action.argument.3e7cd76034615e782f63aac05ca1e897fdcca0f72afe0a9670f6c00d052f0473",
+          "zerker.action.binding.action.argument.4f403beea6719d4381fd270410d0291edc388beaee5d56f731c860d14156e31a",
+          "zerker.action.binding.action.argument.571e5bd1a6e4b8239467e1ad26ce140be15f0c149b373ff4a59988a0e2d3a5de",
+          "zerker.action.binding.action.argument.8e6e4bca7c6cab983bb404288ba8aba560e2d077d10f0e06c90973621ca9932f",
+          "zerker.action.binding.action.argument.e54a8dc33e20b89a246bf84eab9145436752fe3bdb46b3fc8da8ed48647e063a",
+          "zerker.action.binding.action.argument.f4a506ae95d681df1f9535584ec5f45e5283b43c5e334355f7508107577a1bb1",
+          "zerker.action.binding.action.effect.0000",
+          "zerker.action.binding.action.tool",
+          "zerker.action.binding.mission.action",
+          "zerker.action.binding.mission.active",
+          "zerker.action.binding.mission.constraint.02d884680fc46985f286971beb522571fa864c82ff18b8ee85586fadce58fe9a",
+          "zerker.action.binding.mission.constraint.1521d207f3b68d4b3f074029e733e82f8e2e4fe4f340bf8faeeab91fa0f14ad1",
+          "zerker.action.binding.mission.constraint.9f10fa475283fe20ed37a32c4ddd854710c6cbd86bd615682328971d94f13b59",
+          "zerker.action.binding.mission.instruction",
+          "zerker.action.binding.mission.principal"
+        ],
+        "evaluation_time": "2026-08-14T12:00:00Z",
+        "withheld": []
+      }
+    },
+    "request_digest": "sha256:5714542bc54f785a6786eee6d7c74aa8ab6a580384ddbd0f2ba1fd3c6bae96ac",
+    "schema": "zerker.reason.authorization.v1",
+    "status": "authorized"
+  },
+  "request": {
+    "action": {
+      "arguments": {
+        "expires_at": "2026-08-14T12:04:00Z",
+        "host": "api.example.com",
+        "nonce": "nonce_0123456789abcdef",
+        "not_before": "2026-08-14T12:00:00Z",
+        "port": 443,
+        "remote_ip": "203.0.113.10",
+        "schema": "zerker.rakhshak.network-grant.v1",
+        "session_id": "gsess_42_100_20",
+        "transport": "tcp"
+      },
+      "effects": [
+        {
+          "kind": "network_connect",
+          "resource": "tcp://203.0.113.10:443"
+        }
+      ],
+      "id": "action_deploy_140",
+      "proposed_at": "2026-08-14T12:00:00Z",
+      "tool": "rakhshak.network.connect"
+    },
+    "mission": {
+      "constraints": {
+        "commit": "commit_abc",
+        "environment": "production",
+        "version": "1.4.0"
+      },
+      "id": "mission_release_140",
+      "instruction_digest": "sha256:6000298698a1bb97ac6e88e1e889cf69fa8ea9b4ab4a9ca2067d1d6f15f1b851",
+      "issued_at": "2026-08-14T10:00:00Z",
+      "principal": "user:release-owner",
+      "valid_until": "2026-08-14T18:00:00Z"
+    },
+    "policy": {
+      "authority": {
+        "classes": [
+          "agent-proposed",
+          "tool-reported",
+          "human-authorized"
+        ],
+        "default_admit": [
+          "tool-reported",
+          "human-authorized"
+        ],
+        "predicate_admit": {
+          "approved": [
+            "human-authorized"
+          ],
+          "security_reviewed": [
+            "human-authorized"
+          ],
+          "tests_passed": [
+            "tool-reported"
+          ]
+        }
+      },
+      "evaluation_time": "2026-08-14T12:00:00Z",
+      "facts": [
+        {
+          "arguments": [
+            "commit_abc"
+          ],
+          "authority": "tool-reported",
+          "id": "fact_tests_abc",
+          "observed_at": "2026-08-14T11:00:00Z",
+          "predicate": "tests_passed"
+        },
+        {
+          "arguments": [
+            "commit_abc"
+          ],
+          "authority": "human-authorized",
+          "id": "fact_review_abc",
+          "observed_at": "2026-08-14T11:05:00Z",
+          "predicate": "security_reviewed"
+        },
+        {
+          "arguments": [
+            "1.4.0",
+            "release-manager"
+          ],
+          "authority": "human-authorized",
+          "id": "fact_approval_140",
+          "observed_at": "2026-08-14T11:10:00Z",
+          "predicate": "approved",
+          "valid_until": "2026-08-14T16:00:00Z"
+        }
+      ],
+      "ontology": {
+        "id": "software-release-authorization",
+        "predicates": {
+          "approved": {
+            "arguments": [
+              "string",
+              "string"
+            ]
+          },
+          "security_reviewed": {
+            "arguments": [
+              "string"
+            ]
+          },
+          "tests_passed": {
+            "arguments": [
+              "string"
+            ]
+          }
+        },
+        "version": "0.1.0"
+      },
+      "query": {
+        "arguments": [
+          "action_deploy_140"
+        ],
+        "predicate": "action_authorized"
+      },
+      "rules": [
+        {
+          "id": "authorize_exact_rakhshak_destination",
+          "then": {
+            "arguments": [
+              "$action"
+            ],
+            "predicate": "action_authorized"
+          },
+          "when": [
+            {
+              "arguments": [
+                "$mission"
+              ],
+              "predicate": "mission_active"
+            },
+            {
+              "arguments": [
+                "$mission",
+                "$action"
+              ],
+              "predicate": "mission_action"
+            },
+            {
+              "arguments": [
+                "$action",
+                "rakhshak.network.connect"
+              ],
+              "predicate": "action_tool"
+            },
+            {
+              "arguments": [
+                "$action",
+                "schema",
+                "zerker.rakhshak.network-grant.v1"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "nonce",
+                "nonce_0123456789abcdef"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "session_id",
+                "gsess_42_100_20"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "transport",
+                "tcp"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "host",
+                "api.example.com"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "remote_ip",
+                "203.0.113.10"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "port",
+                "number:443"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "not_before",
+                "2026-08-14T12:00:00Z"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "expires_at",
+                "2026-08-14T12:04:00Z"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "network_connect",
+                "tcp://203.0.113.10:443",
+                "none:"
+              ],
+              "predicate": "action_effect"
+            }
+          ]
+        }
+      ],
+      "schema": "zerker.reason.program.v2"
+    },
+    "schema": "zerker.reason.action.v1"
+  },
+  "schema": "zerker.reason.authorization-bundle.v1"
+}

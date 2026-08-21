@@ -9,7 +9,22 @@ permissions:
   contents: write
 
 jobs:
+  validate-schemas:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+
+      - name: Validate packaged schema contracts
+        run: cargo test --locked --test schema_contracts
+
   create-release:
+    needs: validate-schemas
     runs-on: ubuntu-latest
     steps:
       - name: Create GitHub release
@@ -64,7 +79,11 @@ jobs:
           ARCHIVE="zerker-reason-${GITHUB_REF_NAME}-${TARGET}.tar.gz"
           mkdir package
           cp "target/${TARGET}/release/reason" README.md LICENSE package/
-          tar -czf "$ARCHIVE" -C package reason README.md LICENSE
+          cp -R schemas package/schemas
+          cp -R conformance package/conformance
+          mkdir package/scripts
+          cp scripts/check-conformance.py package/scripts/
+          tar -czf "$ARCHIVE" -C package reason README.md LICENSE schemas conformance scripts
           shasum -a 256 "$ARCHIVE" >"$ARCHIVE.sha256"
           echo "archive=$ARCHIVE" >>"$GITHUB_OUTPUT"
 

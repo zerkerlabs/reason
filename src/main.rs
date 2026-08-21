@@ -8,18 +8,23 @@ use std::{
 
 use clap::{Parser, Subcommand, ValueEnum};
 use serde::{
-    Deserialize,
+    Deserialize, Serialize,
     de::{self, DeserializeOwned, MapAccess, SeqAccess, Visitor},
 };
 use zerker_reason::{
-    Atom, CheckResult, Program, Status, VerificationResult,
+    Atom, CheckResult, ERROR_SCHEMA, PROGRAM_SCHEMA, PROGRAM_SCHEMA_V2, Program, RESULT_SCHEMA,
+    RESULT_SCHEMA_V2, Status, VERIFICATION_SCHEMA, VERIFICATION_SCHEMA_V2, VerificationResult,
     action::{
-        ACTION_REQUEST_SCHEMA, AUTHORIZATION_BUNDLE_SCHEMA, ActionRequest, AuthorizationBundle,
-        AuthorizationResult, AuthorizationStatus, AuthorizationVerification, authorize,
-        verify_authorization, verify_authorization_bundle,
+        ACTION_REQUEST_SCHEMA, AUTHORIZATION_BUNDLE_SCHEMA, AUTHORIZATION_RESULT_SCHEMA,
+        AUTHORIZATION_VERIFICATION_SCHEMA, ActionRequest, AuthorizationBundle, AuthorizationResult,
+        AuthorizationStatus, AuthorizationVerification, authorize, verify_authorization,
+        verify_authorization_bundle,
     },
     check,
-    release::{ReleaseAuthorizationInput, compile_release_authorization},
+    release::{
+        RELEASE_AUTHORIZATION_SCHEMA, RELEASE_INIT_SCHEMA, ReleaseAuthorizationInput,
+        compile_release_authorization,
+    },
     validate, verify,
 };
 
@@ -44,6 +49,8 @@ enum OutputFormat {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Report deterministic public compatibility information.
+    Capabilities,
     /// Validate a reasoning program without evaluating its query.
     Validate { input: PathBuf },
     /// Evaluate support for a query and its explicit negation.
@@ -109,7 +116,14 @@ enum ReleaseCommand {
 }
 
 fn main() -> ExitCode {
-    let cli = Cli::parse();
+    let cli = match Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(error) => {
+            let code = if error.exit_code() == 0 { 0 } else { 1 };
+            let _ = error.print();
+            return ExitCode::from(code);
+        }
+    };
     match run(&cli) {
         Ok(code) => code,
         Err(error) => {
@@ -120,7 +134,7 @@ fn main() -> ExitCode {
                 OutputFormat::Json => println!(
                     "{}",
                     serde_json::json!({
-                        "schema": "zerker.reason.error.v1",
+                        "schema": ERROR_SCHEMA,
                         "status": "error",
                         "error": error.to_string()
                     })
@@ -133,6 +147,16 @@ fn main() -> ExitCode {
 
 fn run(cli: &Cli) -> Result<ExitCode, Box<dyn std::error::Error>> {
     match &cli.command {
+        Command::Capabilities => {
+            let capabilities = capabilities();
+            match cli.format {
+                OutputFormat::Text => print_capabilities(&capabilities),
+                OutputFormat::Json => {
+                    println!("{}", serde_json::to_string_pretty(&capabilities)?)
+                }
+            }
+            Ok(ExitCode::SUCCESS)
+        }
         Command::Validate { input } => {
             let program: Program = load(input)?;
             validate(&program)?;
@@ -153,7 +177,7 @@ fn run(cli: &Cli) -> Result<ExitCode, Box<dyn std::error::Error>> {
                 OutputFormat::Json => println!(
                     "{}",
                     serde_json::json!({
-                        "schema": "zerker.reason.validation.v1",
+                        "schema": VALIDATION_SCHEMA,
                         "status": "valid",
                         "ontology": {
                             "id": program.ontology.id,
@@ -260,23 +284,10 @@ fn run_release(
             starter.mission.issued_at = evaluation_time.clone();
             starter.mission.valid_until = None;
             starter.release.proposed_at = evaluation_time.clone();
-            for evidence in starter
-                .evidence
-                .tests
-                .iter_mut()
-                .chain(starter.evidence.security_reviews.iter_mut())
-            {
-                evidence.observed_at = evaluation_time.clone();
-                evidence.valid_until = None;
-            }
-            for evidence in &mut starter.evidence.artifacts {
-                evidence.observed_at = evaluation_time.clone();
-                evidence.valid_until = None;
-            }
-            for evidence in &mut starter.evidence.approvals {
-                evidence.observed_at = evaluation_time.clone();
-                evidence.valid_until = None;
-            }
+            // A starter must never carry fixture approvals or passing evidence.
+            // The unchanged file therefore fails closed until a caller adds
+            // evidence from authenticated and governed sources.
+            starter.evidence = Default::default();
             let compiled = compile_release_authorization(&starter)?;
             let _ = authorize(&compiled)?;
             let bytes = pretty_json_bytes(&starter)?;
@@ -291,12 +302,15 @@ fn run_release(
                         "Release authorization starter written to {}",
                         output.display()
                     );
-                    println!("Next: reason release authorize {}", output.display());
+                    println!(
+                        "Next: add governed evidence, then run reason release authorize {}",
+                        output.display()
+                    );
                 }
                 OutputFormat::Json => println!(
                     "{}",
                     serde_json::json!({
-                        "schema": "zerker.reason.release-init.v1",
+                        "schema": RELEASE_INIT_SCHEMA,
                         "status": "created",
                         "path": output,
                     })
@@ -433,7 +447,203 @@ fn output_identity(path: &Path) -> Result<PathBuf, Box<dyn std::error::Error>> {
     Ok(canonical_parent.join(name))
 }
 
+const CAPABILITIES_SCHEMA: &str = "zerker.reason.capabilities.v1";
+const VALIDATION_SCHEMA: &str = "zerker.reason.validation.v1";
 const MAX_INPUT_BYTES: u64 = 64 << 20;
+
+const COMMAND_NAMES: &[&str] = &[
+    "authorize",
+    "capabilities",
+    "check",
+    "release",
+    "validate",
+    "verify",
+    "verify-authorization",
+    "verify-authorization-bundle",
+];
+const REASONING_STATUSES: &[&str] = &["proved", "unknown", "disproved", "inconsistent"];
+const AUTHORIZATION_STATUSES: &[&str] = &[
+    "authorized",
+    "insufficient_evidence",
+    "denied",
+    "conflicted",
+];
+const EXIT_CODES: &[CapabilityExitCode] = &[
+    CapabilityExitCode {
+        code: 0,
+        meaning: "success_or_proved_or_authorized",
+    },
+    CapabilityExitCode {
+        code: 1,
+        meaning: "invalid_input_command_usage_engine_or_verification_failure",
+    },
+    CapabilityExitCode {
+        code: 2,
+        meaning: "unknown_or_insufficient_evidence",
+    },
+    CapabilityExitCode {
+        code: 3,
+        meaning: "disproved_or_denied",
+    },
+    CapabilityExitCode {
+        code: 4,
+        meaning: "inconsistent_or_conflicted",
+    },
+];
+
+#[derive(Debug, Serialize)]
+struct Capabilities {
+    schema: &'static str,
+    binary_version: &'static str,
+    schema_identifiers: CapabilitySchemaIdentifiers,
+    commands: &'static [&'static str],
+    reasoning_statuses: &'static [&'static str],
+    authorization_statuses: &'static [&'static str],
+    validation_statuses: &'static [&'static str],
+    verification_statuses: &'static [&'static str],
+    error_statuses: &'static [&'static str],
+    exit_codes: &'static [CapabilityExitCode],
+    limits: CapabilityLimits,
+}
+
+#[derive(Debug, Serialize)]
+struct CapabilitySchemaIdentifiers {
+    capabilities: &'static [&'static str],
+    program: &'static [&'static str],
+    result: &'static [&'static str],
+    action: &'static [&'static str],
+    authorization: &'static [&'static str],
+    authorization_bundle: &'static [&'static str],
+    release_authorization: &'static [&'static str],
+    release_init: &'static [&'static str],
+    verification: &'static [&'static str],
+    validation: &'static [&'static str],
+    error: &'static [&'static str],
+}
+
+#[derive(Debug, Serialize)]
+struct CapabilityExitCode {
+    code: u8,
+    meaning: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct CapabilityLimits {
+    max_cli_input_bytes: u64,
+}
+
+fn capabilities() -> Capabilities {
+    Capabilities {
+        schema: CAPABILITIES_SCHEMA,
+        binary_version: env!("CARGO_PKG_VERSION"),
+        schema_identifiers: CapabilitySchemaIdentifiers {
+            capabilities: &[CAPABILITIES_SCHEMA],
+            program: &[PROGRAM_SCHEMA, PROGRAM_SCHEMA_V2],
+            result: &[RESULT_SCHEMA, RESULT_SCHEMA_V2],
+            action: &[ACTION_REQUEST_SCHEMA],
+            authorization: &[AUTHORIZATION_RESULT_SCHEMA],
+            authorization_bundle: &[AUTHORIZATION_BUNDLE_SCHEMA],
+            release_authorization: &[RELEASE_AUTHORIZATION_SCHEMA],
+            release_init: &[RELEASE_INIT_SCHEMA],
+            verification: &[
+                VERIFICATION_SCHEMA,
+                VERIFICATION_SCHEMA_V2,
+                AUTHORIZATION_VERIFICATION_SCHEMA,
+            ],
+            validation: &[VALIDATION_SCHEMA],
+            error: &[ERROR_SCHEMA],
+        },
+        commands: COMMAND_NAMES,
+        reasoning_statuses: REASONING_STATUSES,
+        authorization_statuses: AUTHORIZATION_STATUSES,
+        validation_statuses: &["valid"],
+        verification_statuses: &["verified"],
+        error_statuses: &["error"],
+        exit_codes: EXIT_CODES,
+        limits: CapabilityLimits {
+            max_cli_input_bytes: MAX_INPUT_BYTES,
+        },
+    }
+}
+
+fn print_capabilities(capabilities: &Capabilities) {
+    println!("REASON {} CAPABILITIES", capabilities.binary_version);
+    println!("Schemas:");
+    println!(
+        "  capabilities: {}",
+        capabilities.schema_identifiers.capabilities.join(" | ")
+    );
+    println!(
+        "  program: {}",
+        capabilities.schema_identifiers.program.join(" | ")
+    );
+    println!(
+        "  result: {}",
+        capabilities.schema_identifiers.result.join(" | ")
+    );
+    println!(
+        "  action: {}",
+        capabilities.schema_identifiers.action.join(" | ")
+    );
+    println!(
+        "  authorization: {}",
+        capabilities.schema_identifiers.authorization.join(" | ")
+    );
+    println!(
+        "  authorization bundle: {}",
+        capabilities
+            .schema_identifiers
+            .authorization_bundle
+            .join(" | ")
+    );
+    println!(
+        "  release authorization: {}",
+        capabilities
+            .schema_identifiers
+            .release_authorization
+            .join(" | ")
+    );
+    println!(
+        "  release init: {}",
+        capabilities.schema_identifiers.release_init.join(" | ")
+    );
+    println!(
+        "  verification: {}",
+        capabilities.schema_identifiers.verification.join(" | ")
+    );
+    println!(
+        "  validation: {}",
+        capabilities.schema_identifiers.validation.join(" | ")
+    );
+    println!(
+        "  error: {}",
+        capabilities.schema_identifiers.error.join(" | ")
+    );
+    println!("Commands: {}", capabilities.commands.join(" | "));
+    println!("Statuses: {}", capabilities.reasoning_statuses.join(" | "));
+    println!(
+        "Authorization: {}",
+        capabilities.authorization_statuses.join(" | ")
+    );
+    println!(
+        "Other outcomes: validation {} | verification {} | error {}",
+        capabilities.validation_statuses.join(" | "),
+        capabilities.verification_statuses.join(" | "),
+        capabilities.error_statuses.join(" | ")
+    );
+    println!("Exit codes:");
+    for exit_code in capabilities.exit_codes {
+        println!(
+            "  {} {}",
+            exit_code.code,
+            exit_code.meaning.replace('_', " ")
+        );
+    }
+    println!(
+        "Input limit: {} bytes (64 MiB)",
+        capabilities.limits.max_cli_input_bytes
+    );
+}
 
 fn load<T: DeserializeOwned>(path: &PathBuf) -> Result<T, Box<dyn std::error::Error>> {
     let text = if path.as_os_str() == "-" {
@@ -826,7 +1036,21 @@ fn display_value(value: &serde_json::Value) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_unique_json, read_bounded};
+    use clap::CommandFactory;
+
+    use super::{COMMAND_NAMES, Cli, capabilities, parse_unique_json, read_bounded};
+
+    #[test]
+    fn capabilities_command_inventory_matches_clap() {
+        let clap = Cli::command();
+        let mut clap_commands = clap
+            .get_subcommands()
+            .map(|command| command.get_name())
+            .collect::<Vec<_>>();
+        clap_commands.sort_unstable();
+        assert_eq!(capabilities().commands, clap_commands);
+        assert_eq!(capabilities().commands, COMMAND_NAMES);
+    }
 
     #[test]
     fn bounded_reader_rejects_input_before_reading_past_the_sentinel_byte() {

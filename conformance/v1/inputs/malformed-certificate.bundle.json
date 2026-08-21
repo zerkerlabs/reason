@@ -1,0 +1,306 @@
+{
+  "certificate": {},
+  "request": {
+    "action": {
+      "arguments": {
+        "commit": "commit_abc",
+        "environment": "production",
+        "version": "1.4.0"
+      },
+      "effects": [
+        {
+          "kind": "deploy",
+          "resource": "release:1.4.0",
+          "value": "production"
+        }
+      ],
+      "id": "action_deploy_140",
+      "proposed_at": "2026-08-14T12:00:00Z",
+      "tool": "deploy_release"
+    },
+    "mission": {
+      "constraints": {
+        "commit": "commit_abc",
+        "environment": "production",
+        "version": "1.4.0"
+      },
+      "id": "mission_release_140",
+      "instruction_digest": "sha256:6000298698a1bb97ac6e88e1e889cf69fa8ea9b4ab4a9ca2067d1d6f15f1b851",
+      "issued_at": "2026-08-14T10:00:00Z",
+      "principal": "user:release-owner",
+      "valid_until": "2026-08-14T18:00:00Z"
+    },
+    "policy": {
+      "authority": {
+        "classes": [
+          "agent-proposed",
+          "tool-reported",
+          "human-authorized"
+        ],
+        "default_admit": [
+          "tool-reported",
+          "human-authorized"
+        ],
+        "predicate_admit": {
+          "approved": [
+            "human-authorized"
+          ],
+          "security_reviewed": [
+            "human-authorized"
+          ],
+          "tests_passed": [
+            "tool-reported"
+          ]
+        }
+      },
+      "evaluation_time": "2026-08-14T12:00:00Z",
+      "facts": [
+        {
+          "arguments": [
+            "commit_abc"
+          ],
+          "authority": "tool-reported",
+          "id": "fact_tests_abc",
+          "observed_at": "2026-08-14T11:00:00Z",
+          "predicate": "tests_passed"
+        },
+        {
+          "arguments": [
+            "commit_abc"
+          ],
+          "authority": "human-authorized",
+          "id": "fact_review_abc",
+          "observed_at": "2026-08-14T11:05:00Z",
+          "predicate": "security_reviewed"
+        },
+        {
+          "arguments": [
+            "1.4.0",
+            "release-manager"
+          ],
+          "authority": "human-authorized",
+          "id": "fact_approval_140",
+          "observed_at": "2026-08-14T11:10:00Z",
+          "predicate": "approved",
+          "valid_until": "2026-08-14T16:00:00Z"
+        }
+      ],
+      "ontology": {
+        "id": "software-release-authorization",
+        "predicates": {
+          "approved": {
+            "arguments": [
+              "string",
+              "string"
+            ]
+          },
+          "security_reviewed": {
+            "arguments": [
+              "string"
+            ]
+          },
+          "tests_passed": {
+            "arguments": [
+              "string"
+            ]
+          }
+        },
+        "version": "0.1.0"
+      },
+      "query": {
+        "arguments": [
+          "action_deploy_140"
+        ],
+        "predicate": "action_authorized"
+      },
+      "rules": [
+        {
+          "id": "rule_authorize_production_deploy",
+          "then": {
+            "arguments": [
+              "$action"
+            ],
+            "predicate": "action_authorized"
+          },
+          "when": [
+            {
+              "arguments": [
+                "$mission"
+              ],
+              "predicate": "mission_active"
+            },
+            {
+              "arguments": [
+                "$mission",
+                "$action"
+              ],
+              "predicate": "mission_action"
+            },
+            {
+              "arguments": [
+                "$mission",
+                "user:release-owner"
+              ],
+              "predicate": "mission_principal"
+            },
+            {
+              "arguments": [
+                "$mission",
+                "environment",
+                "production"
+              ],
+              "predicate": "mission_constraint"
+            },
+            {
+              "arguments": [
+                "$mission",
+                "version",
+                "1.4.0"
+              ],
+              "predicate": "mission_constraint"
+            },
+            {
+              "arguments": [
+                "$mission",
+                "commit",
+                "commit_abc"
+              ],
+              "predicate": "mission_constraint"
+            },
+            {
+              "arguments": [
+                "$action",
+                "deploy_release"
+              ],
+              "predicate": "action_tool"
+            },
+            {
+              "arguments": [
+                "$action",
+                "environment",
+                "production"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "version",
+                "1.4.0"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "commit",
+                "commit_abc"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$action",
+                "deploy",
+                "release:1.4.0",
+                "production"
+              ],
+              "predicate": "action_effect"
+            },
+            {
+              "arguments": [
+                "commit_abc"
+              ],
+              "predicate": "tests_passed"
+            },
+            {
+              "arguments": [
+                "commit_abc"
+              ],
+              "predicate": "security_reviewed"
+            },
+            {
+              "arguments": [
+                "1.4.0",
+                "release-manager"
+              ],
+              "predicate": "approved"
+            }
+          ]
+        },
+        {
+          "id": "rule_deny_revoked_security_review",
+          "then": {
+            "arguments": [
+              "$action"
+            ],
+            "negated": true,
+            "predicate": "action_authorized"
+          },
+          "when": [
+            {
+              "arguments": [
+                "$action",
+                "deploy_release"
+              ],
+              "predicate": "action_tool"
+            },
+            {
+              "arguments": [
+                "$action",
+                "commit",
+                "$commit"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$commit"
+              ],
+              "negated": true,
+              "predicate": "security_reviewed"
+            }
+          ]
+        },
+        {
+          "id": "rule_deny_rejected_release",
+          "then": {
+            "arguments": [
+              "$action"
+            ],
+            "negated": true,
+            "predicate": "action_authorized"
+          },
+          "when": [
+            {
+              "arguments": [
+                "$action",
+                "deploy_release"
+              ],
+              "predicate": "action_tool"
+            },
+            {
+              "arguments": [
+                "$action",
+                "version",
+                "$version"
+              ],
+              "predicate": "action_argument"
+            },
+            {
+              "arguments": [
+                "$version",
+                "release-manager"
+              ],
+              "negated": true,
+              "predicate": "approved"
+            }
+          ]
+        }
+      ],
+      "schema": "zerker.reason.program.v2"
+    },
+    "schema": "zerker.reason.action.v1"
+  },
+  "schema": "zerker.reason.authorization-bundle.v1"
+}

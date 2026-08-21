@@ -29,7 +29,7 @@ reason --format json verify-authorization-bundle \
 
 Only `authorized` exits `0`. Missing or stale evidence exits `2`, explicit failure or denial exits `3`, conflict exits `4`, and malformed or unverifiable material exits `1`.
 
-`release init` requires an explicit evaluation time and uses it for the generated snapshot; it never reads the wall clock. It refuses to overwrite an existing file unless `--force` is provided. `release authorize` stages every requested output before publishing any of them and refuses duplicate or existing output paths, preventing one artifact from silently replacing another.
+`release init` requires an explicit evaluation time and uses it for the generated snapshot; it never reads the wall clock. The starter contains no tests, reviews, artifacts, or approvals, so running it unchanged returns `insufficient_evidence`. It refuses to overwrite an existing file unless `--force` is provided. `release authorize` stages every requested output before publishing any of them and refuses duplicate or existing output paths, preventing one artifact from silently replacing another.
 
 ## Input contract
 

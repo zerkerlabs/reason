@@ -9,6 +9,7 @@ use crate::{
 };
 
 pub const RELEASE_AUTHORIZATION_SCHEMA: &str = "zerker.reason.release-authorization.v1";
+pub const RELEASE_INIT_SCHEMA: &str = "zerker.reason.release-init.v1";
 const RELEASE_POLICY_SCHEMA: &str = "zerker.reason.program.v2";
 const TOOL_REPORTED: &str = "tool-reported";
 const HUMAN_AUTHORIZED: &str = "human-authorized";
@@ -496,6 +497,14 @@ mod tests {
         let request = compile_release_authorization(&ready_input()).unwrap();
         let result = authorize(&request).unwrap();
         assert_eq!(result.status, AuthorizationStatus::Authorized);
+        assert_eq!(
+            result.request_digest,
+            "sha256:b713489d49b62e3ac9dd1f3a9df0564fb827be0da5a66b1b82918163636f7a39"
+        );
+        assert_eq!(
+            crate::digest(&result.reasoning).unwrap(),
+            "sha256:fe948970dafc1a8490fa2ed06052e1cb7afd9bdd8b1f3be236244d7972c6c307"
+        );
         verify_authorization(&request, &result).unwrap();
     }
 
