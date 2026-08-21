@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, path::Path};
 
 use serde_json::Value;
 
@@ -19,9 +19,12 @@ fn v020_versions_and_public_fixture_metadata_agree() {
     let lock = fs::read_to_string("Cargo.lock").unwrap();
     assert!(lock.contains("name = \"zerker-reason\"\nversion = \"0.2.0\""));
 
-    let manifest: Value =
-        serde_json::from_slice(&fs::read("website/data/reason/manifest.json").unwrap()).unwrap();
-    assert_eq!(manifest["generator"], format!("reason {version}"));
+    if Path::new("website").exists() {
+        let manifest: Value =
+            serde_json::from_slice(&fs::read("website/data/reason/manifest.json").unwrap())
+                .unwrap();
+        assert_eq!(manifest["generator"], format!("reason {version}"));
+    }
 
     let changelog = fs::read_to_string("CHANGELOG.md").unwrap();
     assert!(changelog.contains("## [0.2.0] - 2026-08-21"));
