@@ -33,9 +33,12 @@ for (const font of ["geist-variable.woff2", "geist-mono-variable.woff2"]) {
   if (!styles.includes(`assets/fonts/${font}`)) throw new Error(`${font} is not declared`);
   await access(resolve(root, `dist/assets/fonts/${font}`));
 }
-const rewrites = JSON.stringify(vercel.rewrites);
-if (!rewrites.includes('"source":"/reason"') || !rewrites.includes('"source":"/reason/:path(.*)"')) {
-  throw new Error("Reason deployment must serve its canonical subpath");
+const expectedRewrites = [
+  { source: "/reason", destination: "/" },
+  { source: "/reason/:path(.*)", destination: "/:path" },
+];
+if (JSON.stringify(vercel.rewrites) !== JSON.stringify(expectedRewrites)) {
+  throw new Error("Reason deployment must serve its complete canonical subpath without clean-URL drift");
 }
 
 for (const [name, status] of Object.entries(expected)) {
