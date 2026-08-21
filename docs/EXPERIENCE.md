@@ -40,6 +40,7 @@ Requirements:
 - domain packs as ordinary versioned files;
 - a small embeddable Rust library;
 - stable exit codes and JSON schemas;
+- deterministic capability discovery for supported contracts and outcomes;
 - exact action and mission digest bindings;
 - fixtures for proved, unknown, denied, inconsistent, and invalid cases.
 
@@ -72,11 +73,11 @@ Requirements:
 
 | Code | Meaning |
 |---:|---|
-| 0 | Query proved, or validation passed |
-| 1 | Invalid input or engine failure |
-| 2 | Query is unknown with current premises |
-| 3 | Query is disproved by explicit opposing support |
-| 4 | Query and its explicit negation are both supported |
+| 0 | Command succeeded, query proved, or action authorized |
+| 1 | Invalid input, command usage, engine failure, or verification failure |
+| 2 | Query unknown or authorization has insufficient evidence |
+| 3 | Query disproved or authorization denied |
+| 4 | Query inconsistent or authorization conflicted |
 
 ## Experience test
 
