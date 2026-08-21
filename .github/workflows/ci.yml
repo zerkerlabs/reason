@@ -37,5 +37,8 @@ jobs:
       - name: Build demo binary
         run: cargo build --locked --bin reason
 
+      - name: Replay authorization conformance corpus
+        run: python3 scripts/check-conformance.py --reason "$PWD/target/debug/reason"
+
       - name: Check certificate-backed website
         run: npm --prefix website run check

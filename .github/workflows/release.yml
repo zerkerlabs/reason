@@ -80,7 +80,10 @@ jobs:
           mkdir package
           cp "target/${TARGET}/release/reason" README.md LICENSE package/
           cp -R schemas package/schemas
-          tar -czf "$ARCHIVE" -C package reason README.md LICENSE schemas
+          cp -R conformance package/conformance
+          mkdir package/scripts
+          cp scripts/check-conformance.py package/scripts/
+          tar -czf "$ARCHIVE" -C package reason README.md LICENSE schemas conformance scripts
           shasum -a 256 "$ARCHIVE" >"$ARCHIVE.sha256"
           echo "archive=$ARCHIVE" >>"$GITHUB_OUTPUT"
 

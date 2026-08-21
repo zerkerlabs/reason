@@ -304,6 +304,18 @@ fn schemas_fail_closed_on_typed_contract_drift() {
 }
 
 #[test]
+fn successful_conformance_bundles_match_the_published_wire_schema() {
+    let manifest = load_json("conformance/v1/manifest.json");
+    for vector in manifest["vectors"].as_array().unwrap() {
+        if vector["expected"]["status"] != "verified" {
+            continue;
+        }
+        let path = Path::new("conformance/v1").join(vector["input"].as_str().unwrap());
+        assert_valid("authorizationBundle", &load_json(path));
+    }
+}
+
+#[test]
 fn application_defined_maps_remain_open_without_opening_typed_objects() {
     let mut request = load_json("examples/authorize-deploy.json");
     request["mission"]["constraints"]["gateway.profile"] = json!({
