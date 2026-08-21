@@ -249,6 +249,17 @@ fn schemas_fail_closed_on_typed_contract_drift() {
     request["action"]["unrecognized_execution_mode"] = json!("bypass");
     assert_invalid("actionRequest", &request);
 
+    for invalid_timestamp in [
+        "2026-99-99T99:99:99Z",
+        "2026-02-30T12:00:00Z",
+        "2026-08-14T12:00:00.000Z",
+        "2026-08-14T12:00:00+00:00",
+    ] {
+        let mut request = load_json("examples/authorize-deploy.json");
+        request["mission"]["issued_at"] = json!(invalid_timestamp);
+        assert_invalid("actionRequest", &request);
+    }
+
     let mut request = load_json("examples/authorize-deploy.json");
     request["policy"]["facts"][0]
         .as_object_mut()
