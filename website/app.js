@@ -6,16 +6,17 @@ const icons = {
   receipt: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2.5h10v15l-2.5-1.5-2.5 1.5L7.5 16 5 17.5v-15Z"/><path d="M8 7h4M8 10h4"/></svg>`,
 };
 
-function mark(label = "ZERKER") {
-  return `<a class="wordmark" href="/reason" aria-label="Zerker Reason home"><span class="mark-glyph"><i></i><i></i></span><b>${label}</b></a>`;
+function mark(label = "ZERKER", productBrand = false) {
+  const productAttribute = productBrand ? " data-zk-product-brand" : "";
+  return `<a class="wordmark"${productAttribute} href="/reason" aria-label="Zerker Reason home"><span class="mark-glyph"><i></i><i></i></span><b>${label}</b></a>`;
 }
 
 function page() {
   return `<main class="zr-shell">
     <nav class="zr-nav">
-      <div class="zr-brand">${mark()}<i></i><span>REASON</span></div>
+      <div class="zr-brand">${mark("ZERKER", true)}<i></i><span>REASON</span></div>
       <div class="zr-preview"><i></i> v0.2</div>
-      <div class="zr-nav-links"><a href="https://zerker.ai/">Gateway</a><button type="button" data-zr-scroll="zr-how">How it works</button><button type="button" data-zr-scroll="zr-demo">Live demo</button></div>
+      <div class="zr-nav-links"><button type="button" data-zr-scroll="zr-how">How it works</button><button type="button" data-zr-scroll="zr-demo">Live demo</button></div>
     </nav>
 
     <header class="zr-hero">
