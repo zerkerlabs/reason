@@ -11,7 +11,7 @@ use serde::{
     de::{self, DeserializeOwned, MapAccess, SeqAccess, Visitor},
 };
 use zerker_reason::{
-    Atom, CheckResult, Program, Status, VerificationResult,
+    Atom, CheckResult, ERROR_SCHEMA, Program, Status, VerificationResult,
     action::{
         ActionRequest, AuthorizationBundle, AuthorizationResult, AuthorizationStatus,
         AuthorizationVerification, authorize, verify_authorization, verify_authorization_bundle,
@@ -84,7 +84,7 @@ fn main() -> ExitCode {
                 OutputFormat::Json => println!(
                     "{}",
                     serde_json::json!({
-                        "schema": "zerker.reason.error.v1",
+                        "schema": ERROR_SCHEMA,
                         "status": "error",
                         "error": error.to_string()
                     })

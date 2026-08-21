@@ -158,6 +158,8 @@ The response uses `zerker.reason.result.v1` for non-temporal programs and `zerke
 
 No network, account, daemon, or LLM is required for the symbolic check.
 
+Draft 2020-12 wire-shape schemas for the stable authorization values are in [`schemas/`](schemas/README.md). Schema validation is structural; use Reason itself for semantic authorization verification.
+
 ## Security status
 
 Zerker Reason is pre-release software. Read [`SECURITY.md`](SECURITY.md) before using it near production actions. A valid authorization certificate still requires an independent enforcement layer to bind execution to the exact certified action.

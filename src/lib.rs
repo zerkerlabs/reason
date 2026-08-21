@@ -14,6 +14,7 @@ pub const RESULT_SCHEMA: &str = "zerker.reason.result.v1";
 pub const RESULT_SCHEMA_V2: &str = "zerker.reason.result.v2";
 pub const VERIFICATION_SCHEMA: &str = "zerker.reason.verification.v1";
 pub const VERIFICATION_SCHEMA_V2: &str = "zerker.reason.verification.v2";
+pub const ERROR_SCHEMA: &str = "zerker.reason.error.v1";
 const MAX_ROUNDS: usize = 1_024;
 
 type Bindings = BTreeMap<String, Value>;
