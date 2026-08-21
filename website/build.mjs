@@ -6,4 +6,5 @@ for (const file of ["index.html", "app.js", "styles.css", "reason.css"]) {
   await cp(file, `dist/${file}`);
 }
 await cp("data", "dist/data", { recursive: true });
+await cp("assets", "dist/assets", { recursive: true });
 console.log("Zerker Reason site built in dist/");

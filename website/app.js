@@ -7,15 +7,15 @@ const icons = {
 };
 
 function mark(label = "ZERKER") {
-  return `<a class="wordmark" href="/" aria-label="Zerker Reason home"><span class="mark-glyph"><i></i><i></i></span><b>${label}</b></a>`;
+  return `<a class="wordmark" href="." aria-label="Zerker Reason home"><span class="mark-glyph"><i></i><i></i></span><b>${label}</b></a>`;
 }
 
 function page() {
   return `<main class="zr-shell">
     <nav class="zr-nav">
       <div class="zr-brand">${mark()}<i></i><span>REASON</span></div>
-      <div class="zr-preview"><i></i> v0.1 developer preview</div>
-      <div class="zr-nav-links"><a href="https://docs.zerker.ai/">Gateway</a><button type="button" data-zr-scroll="zr-how">How it works</button><button type="button" data-zr-scroll="zr-demo">Live demo</button></div>
+      <div class="zr-preview"><i></i> v0.2 release candidate</div>
+      <div class="zr-nav-links"><a href="https://zerker.ai/">Gateway</a><button type="button" data-zr-scroll="zr-how">How it works</button><button type="button" data-zr-scroll="zr-demo">Live demo</button></div>
     </nav>
 
     <header class="zr-hero">
@@ -89,7 +89,7 @@ function page() {
 
     <section class="zr-stack">
       <div><p>ONE JOB PER BOUNDARY</p><h2>Reason proves.<br>The stack does the rest.</h2></div>
-      <div><article><span>ZMEM</span><b>Supplies governed facts</b><small>ADAPTER PENDING</small></article><article class="current"><span>REASON</span><b>Derives and verifies authorization</b><small>WORKING · 49 TESTS</small></article><article><span>GUARD</span><b>Enforces the exact action</b><small>NEXT INTEGRATION</small></article><article><span>TREESHIP</span><b>Preserves the certificate</b><small>INTEGRATION WORKFLOW</small></article></div>
+      <div><article><span>ZMEM</span><b>Supplies governed premises</b><small>GOVERNED EXPORT MERGED</small></article><article class="current"><span>REASON</span><b>Derives and verifies authorization</b><small>V0.2 RELEASE CANDIDATE</small></article><article><span>GATEWAY</span><b>Enforces the exact MCP call</b><small>INTEGRATION MERGED</small></article><article><span>RAKHSHAK</span><b>Binds process and destination</b><small>INTEGRATION MERGED</small></article><article><span>TREESHIP</span><b>Preserves verified decisions</b><small>VERIFY-THEN-SIGN PR OPEN</small></article></div>
     </section>
 
     <section class="zr-start"><div><p>RUN IT LOCALLY</p><h2>Proof in two commands.</h2><span>No daemon, network, account, wall clock, or LLM.</span></div><pre><i>$</i> reason authorize deploy.json \
@@ -97,7 +97,7 @@ function page() {
 <i>$</i> reason verify-authorization \
     deploy.json authorization.json
 <span>✓ VERIFIED_AUTHORIZATION</span></pre></section>
-    <footer class="zr-footer"><div>${mark()}<i></i><span>REASON</span></div><p>Apache 2.0 · deterministic · local first</p><a href="https://docs.zerker.ai/">Explore Zerker Gateway →</a></footer>
+    <footer class="zr-footer"><div>${mark()}<i></i><span>REASON</span></div><p>Apache 2.0 · deterministic · local first</p><a href="https://zerker.ai/">Explore Zerker Gateway →</a></footer>
   </main>`;
 }
 

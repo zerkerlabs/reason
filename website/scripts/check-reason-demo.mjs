@@ -20,6 +20,24 @@ try { await access(binary, constants.X_OK); } catch { canReplay = false; }
 const manifest = JSON.parse(await readFile(resolve(dataDir, "manifest.json"), "utf8"));
 if (manifest.schema !== "zerker.demo.reason-fixtures.v1") throw new Error("wrong fixture manifest schema");
 
+const index = await readFile(resolve(root, "index.html"), "utf8");
+const styles = await readFile(resolve(root, "styles.css"), "utf8");
+const vercel = JSON.parse(await readFile(resolve(root, "vercel.json"), "utf8"));
+if (!index.includes('<base href="/reason/" />') || !index.includes('rel="canonical" href="https://zerker.ai/reason"')) {
+  throw new Error("Reason must use the canonical zerker.ai/reason base path");
+}
+if (index.includes("fonts.googleapis.com") || index.includes("fonts.gstatic.com")) {
+  throw new Error("Reason must not require third-party font hosts");
+}
+for (const font of ["geist-variable.woff2", "geist-mono-variable.woff2"]) {
+  if (!styles.includes(`assets/fonts/${font}`)) throw new Error(`${font} is not declared`);
+  await access(resolve(root, `dist/assets/fonts/${font}`));
+}
+const rewrites = JSON.stringify(vercel.rewrites);
+if (!rewrites.includes('"source":"/reason"') || !rewrites.includes('"source":"/reason/:path(.*)"')) {
+  throw new Error("Reason deployment must serve its canonical subpath");
+}
+
 for (const [name, status] of Object.entries(expected)) {
   const requestPath = resolve(dataDir, `${name}-request.json`);
   const certificatePath = resolve(dataDir, `${name}-certificate.json`);

@@ -4,6 +4,10 @@
   "outputDirectory": "dist",
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/reason", "destination": "/index.html" },
+    { "source": "/reason/:path(.*)", "destination": "/:path" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
