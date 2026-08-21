@@ -23,14 +23,17 @@ if (manifest.schema !== "zerker.demo.reason-fixtures.v1") throw new Error("wrong
 const index = await readFile(resolve(root, "index.html"), "utf8");
 const styles = await readFile(resolve(root, "styles.css"), "utf8");
 const vercel = JSON.parse(await readFile(resolve(root, "vercel.json"), "utf8"));
-if (!index.includes('<base href="/reason/" />') || !index.includes('rel="canonical" href="https://zerker.ai/reason"')) {
-  throw new Error("Reason must use the canonical zerker.ai/reason base path");
+if (index.includes("<base") || !index.includes('rel="canonical" href="https://zerker.ai/reason"')) {
+  throw new Error("Reason must use explicit CSP-safe paths at its canonical zerker.ai/reason URL");
+}
+for (const asset of ["styles.css", "reason.css", "app.js"]) {
+  if (!index.includes(`/reason/${asset}`)) throw new Error(`${asset} is not bound to the canonical subpath`);
 }
 if (index.includes("fonts.googleapis.com") || index.includes("fonts.gstatic.com")) {
   throw new Error("Reason must not require third-party font hosts");
 }
 for (const font of ["geist-variable.woff2", "geist-mono-variable.woff2"]) {
-  if (!styles.includes(`assets/fonts/${font}`)) throw new Error(`${font} is not declared`);
+  if (!styles.includes(`/reason/assets/fonts/${font}`)) throw new Error(`${font} is not declared at the canonical subpath`);
   await access(resolve(root, `dist/assets/fonts/${font}`));
 }
 const expectedRewrites = [
