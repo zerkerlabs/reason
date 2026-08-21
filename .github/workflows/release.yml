@@ -61,15 +61,19 @@ jobs:
           - name: Linux x86_64
             os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+            native_smoke: true
           - name: Linux arm64
             os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
+            native_smoke: true
           - name: macOS arm64
             os: macos-14
             target: aarch64-apple-darwin
+            native_smoke: true
           - name: macOS x86_64
             os: macos-14
             target: x86_64-apple-darwin
+            native_smoke: false
 
     steps:
       - name: Check out source
@@ -96,7 +100,10 @@ jobs:
           cp -R schemas package/schemas
           cp -R conformance package/conformance
           cp scripts/check-conformance.py package/scripts/
-          package/reason --version
+          file package/reason
+          if [[ "${{ matrix.native_smoke }}" == "true" ]]; then
+            package/reason --version
+          fi
           tar -czf "$ARCHIVE" -C package reason README.md LICENSE schemas conformance scripts
           shasum -a 256 "$ARCHIVE" >"$ARCHIVE.sha256"
 

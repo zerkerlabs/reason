@@ -48,6 +48,7 @@ fn release_workflow_stages_every_platform_before_publication() {
         "actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4",
         "actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0",
         "--verify-tag --draft",
+        "native_smoke: false",
         "gh release edit",
         "schemas conformance scripts",
     ] {
