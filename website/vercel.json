@@ -5,7 +5,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/reason", "destination": "/index.html" },
+    { "source": "/reason", "destination": "/" },
     { "source": "/reason/:path(.*)", "destination": "/:path" }
   ],
   "headers": [
