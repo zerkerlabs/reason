@@ -11,8 +11,8 @@ use serde::{
     de::{self, DeserializeOwned, MapAccess, SeqAccess, Visitor},
 };
 use zerker_reason::{
-    Atom, CheckResult, PROGRAM_SCHEMA, PROGRAM_SCHEMA_V2, Program, RESULT_SCHEMA, RESULT_SCHEMA_V2,
-    Status, VERIFICATION_SCHEMA, VERIFICATION_SCHEMA_V2, VerificationResult,
+    Atom, CheckResult, ERROR_SCHEMA, PROGRAM_SCHEMA, PROGRAM_SCHEMA_V2, Program, RESULT_SCHEMA,
+    RESULT_SCHEMA_V2, Status, VERIFICATION_SCHEMA, VERIFICATION_SCHEMA_V2, VerificationResult,
     action::{
         ACTION_REQUEST_SCHEMA, AUTHORIZATION_BUNDLE_SCHEMA, AUTHORIZATION_RESULT_SCHEMA,
         AUTHORIZATION_VERIFICATION_SCHEMA, ActionRequest, AuthorizationBundle, AuthorizationResult,
@@ -231,7 +231,6 @@ fn run(cli: &Cli) -> Result<ExitCode, Box<dyn std::error::Error>> {
 
 const CAPABILITIES_SCHEMA: &str = "zerker.reason.capabilities.v1";
 const VALIDATION_SCHEMA: &str = "zerker.reason.validation.v1";
-const ERROR_SCHEMA: &str = "zerker.reason.error.v1";
 const MAX_INPUT_BYTES: u64 = 64 << 20;
 
 const COMMAND_NAMES: &[&str] = &[
