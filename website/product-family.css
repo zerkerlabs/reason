@@ -383,6 +383,6 @@
 .zr-brand .zk-product-family { min-height: 40px; }
 .zr-brand .zk-product-panel { text-align: left; }
 @media (max-width: 720px) {
-  .zr-brand .wordmark b { display: none; }
-  .zr-brand .zk-product-divider { margin-left: 4px; }
+  .zr-brand .wordmark b { font-size: 12px; }
+  .zr-brand .zk-product-divider { margin-left: 6px; }
 }
