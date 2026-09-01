@@ -290,6 +290,23 @@ pub fn validate_action_request(request: &ActionRequest) -> Result<(), ReasonErro
             "$.policy.authority.classes: {SYSTEM_AUTHORITY:?} is reserved for request bindings"
         ));
     }
+    if request
+        .policy
+        .authority
+        .default_admit
+        .contains(SYSTEM_AUTHORITY)
+    {
+        errors.push(format!(
+            "$.policy.authority.default_admit: {SYSTEM_AUTHORITY:?} is reserved for request bindings"
+        ));
+    }
+    for (predicate, admitted) in &request.policy.authority.predicate_admit {
+        if admitted.contains(SYSTEM_AUTHORITY) {
+            errors.push(format!(
+                "$.policy.authority.predicate_admit.{predicate}: {SYSTEM_AUTHORITY:?} is reserved for request bindings"
+            ));
+        }
+    }
     for (predicate, _) in RESERVED_PREDICATES {
         if request.policy.ontology.predicates.contains_key(*predicate) {
             errors.push(format!(

@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "zerker.reason.policy-source-manifest.v1.schema.json",
+  "title": "zerker.reason.policy-source-manifest.v1",
+  "description": "A strict inventory of human policy source paths and review metadata. Inclusion commits bytes; it does not prove comprehension or symbolic truth.",
+  "$ref": "zerker.reason.contracts.v1.schema.json#/$defs/policySourceManifest"
+}

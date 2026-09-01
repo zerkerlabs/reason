@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "zerker.reason.policy-authorization-verification-input.v1.schema.json",
+  "title": "zerker.reason.policy-authorization-verification-input.v1",
+  "description": "A locked policy bundle and atomic policy authorization for deterministic template re-expansion and independent verification.",
+  "$ref": "zerker.reason.contracts.v1.schema.json#/$defs/policyAuthorizationVerificationInput"
+}
