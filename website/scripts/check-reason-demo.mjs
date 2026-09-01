@@ -22,6 +22,8 @@ if (manifest.schema !== "zerker.demo.reason-fixtures.v1") throw new Error("wrong
 
 const index = await readFile(resolve(root, "index.html"), "utf8");
 const styles = await readFile(resolve(root, "styles.css"), "utf8");
+const app = await readFile(resolve(root, "app.js"), "utf8");
+const productSwitcher = await readFile(resolve(root, "product-switcher.js"), "utf8");
 const vercel = JSON.parse(await readFile(resolve(root, "vercel.json"), "utf8"));
 if (index.includes("<base") || !index.includes('rel="canonical" href="https://zerker.ai/reason"')) {
   throw new Error("Reason must use explicit CSP-safe paths at its canonical zerker.ai/reason URL");
@@ -31,6 +33,22 @@ for (const asset of ["styles.css", "reason.css", "app.js"]) {
 }
 if (index.includes("fonts.googleapis.com") || index.includes("fonts.gstatic.com")) {
   throw new Error("Reason must not require third-party font hosts");
+}
+for (const product of ["Agent Gateway", "Operator Console", "Agent Portals"]) {
+  if (!productSwitcher.includes(product)) throw new Error(`Reason switcher is missing Zerker platform product: ${product}`);
+}
+for (const portfolioRow of ["<strong>Reason</strong>", "<strong>Guard</strong>", "<strong>ZMem</strong>", "<strong>Treeship</strong>"]) {
+  if (productSwitcher.includes(portfolioRow)) throw new Error(`Reason switcher must not mix portfolio products into platform navigation: ${portfolioRow}`);
+}
+for (const claim of [
+  "ORGANIZATION POLICY LAYER",
+  "It does not interpret instruction files into policy, and it cannot prove a model read them.",
+  "transactional MCP <code>tools/call</code>",
+  "does not automatically authorize raw calls",
+  "ZERKER_REASON_BINARY",
+  "Rows 02–06 are authorization patterns the same exact-action contract supports",
+]) {
+  if (!app.includes(claim)) throw new Error(`Reason site is missing its product boundary: ${claim}`);
 }
 for (const font of ["geist-variable.woff2", "geist-mono-variable.woff2"]) {
   if (!styles.includes(`/reason/assets/fonts/${font}`)) throw new Error(`${font} is not declared at the canonical subpath`);

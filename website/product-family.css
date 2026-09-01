@@ -1,0 +1,390 @@
+/* Zerker Web Theme v1
+   Canonical brand, typography, color, geometry, motion, and layout tokens.
+   Product/page styles consume these tokens rather than redefining the theme. */
+
+@font-face {
+  font-family: 'Geist';
+  src: url('/reason/assets/fonts/geist-variable.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/reason/assets/fonts/geist-mono-variable.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  /* Brand color */
+  --zk-bg: #f8f8f6;
+  --zk-surface: #ffffff;
+  --zk-ink: #0a0a0a;
+  --zk-ink-raised: #161616;
+  --zk-ink-soft: #1c1c1c;
+  --zk-text: #101010;
+  --zk-text-secondary: #5f6561;
+  --zk-text-secondary-dark: #9aa09b;
+  --zk-hairline: #e4e4e0;
+  --zk-hairline-strong: #d9d9d4;
+  --zk-accent: #6656fb;
+  --zk-accent-soft: rgba(102, 86, 251, 0.09);
+  --zk-success: #16866a;
+  --zk-warning: #a86f00;
+  --zk-danger: #c33e4b;
+
+  /* Typography */
+  --zk-font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', sans-serif;
+  --zk-font-mono: 'Geist Mono', 'SF Mono', ui-monospace, Menlo, monospace;
+
+  /* Geometry */
+  --zk-radius-control: 10px;
+  --zk-radius-control-lg: 12px;
+  --zk-radius-nav: 16px;
+  --zk-radius-card: 24px;
+  --zk-content: 1080px;
+  --zk-reading: 780px;
+  --zk-gutter: 28px;
+  --zk-gutter-mobile: 18px;
+
+  /* Elevation and motion */
+  --zk-shadow-nav: 0 12px 32px rgba(22, 22, 22, 0.08), 0 1px 2px rgba(22, 22, 22, 0.05);
+  --zk-shadow-card: 0 16px 40px rgba(22, 22, 22, 0.08), 0 1px 2px rgba(22, 22, 22, 0.05);
+  --zk-ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --zk-duration-fast: 180ms;
+  --zk-duration-base: 250ms;
+  --zk-duration-reveal: 720ms;
+}
+
+/* Reusable brand lockup. The mark is a mask so it inherits currentColor. */
+.zk-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--zk-ink);
+  font-family: var(--zk-font-sans);
+  font-size: 14px;
+  font-weight: 760;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.zk-mark {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  background: currentColor;
+  -webkit-mask: url('/reason/assets/brand/zerker-mark.svg') center / contain no-repeat;
+  mask: url('/reason/assets/brand/zerker-mark.svg') center / contain no-repeat;
+}
+.zk-brand--light { color: #fff; }
+
+/* Shared product-family switcher. Markup is installed by product-switcher.js so
+   Gateway, Reason, and Guard can use the same accessible interaction. */
+.zk-product-family {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+.zk-product-family > .brand,
+.zk-product-family > .mark { flex: 0 0 auto; }
+.zk-product-family-ready .zk-product-family .mark__suffix { display: none; }
+.zk-product-family-ready .nav__reason { display: none; }
+.zk-product-divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 9px 0 11px;
+  background: var(--zk-hairline-strong);
+}
+.zk-product-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--zk-text-secondary);
+  background: transparent;
+  font-family: var(--zk-font-mono);
+  font-size: 9px;
+  font-weight: 590;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--zk-duration-fast), background var(--zk-duration-fast);
+}
+.zk-product-trigger:hover,
+.zk-product-trigger:focus-visible,
+.zk-product-family[data-open='true'] .zk-product-trigger {
+  color: var(--zk-ink);
+  background: rgba(10, 10, 10, 0.055);
+}
+.zk-product-trigger svg {
+  width: 10px;
+  height: 6px;
+  overflow: visible;
+  transition: transform var(--zk-duration-base) var(--zk-ease-expo);
+}
+.zk-product-trigger path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.zk-product-family[data-open='true'] .zk-product-trigger svg { transform: rotate(180deg); }
+.zk-product-panel {
+  position: absolute;
+  top: calc(100% + 17px);
+  left: -15px;
+  z-index: 1002;
+  width: min(430px, calc(100vw - 36px));
+  padding: 12px;
+  border: 1px solid rgba(10, 10, 10, 0.09);
+  border-radius: 20px;
+  color: var(--zk-text);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 28px 70px rgba(22, 22, 22, 0.18), 0 2px 8px rgba(22, 22, 22, 0.06);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-7px) scale(0.975);
+  transform-origin: 82px 0;
+  transition:
+    opacity var(--zk-duration-fast) ease,
+    visibility var(--zk-duration-fast),
+    transform var(--zk-duration-base) var(--zk-ease-expo);
+}
+.zk-product-family[data-open='true'] .zk-product-panel {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+.zk-product-panel__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+  padding: 0 4px 7px 8px;
+}
+.zk-product-panel__top p,
+.zk-related > p {
+  margin: 0;
+  color: var(--zk-text-secondary);
+  font-family: var(--zk-font-mono);
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.zk-product-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--zk-text-secondary);
+  background: transparent;
+  cursor: pointer;
+}
+.zk-product-close:hover,
+.zk-product-close:focus-visible { color: var(--zk-ink); background: rgba(10, 10, 10, 0.055); }
+.zk-product-close svg { width: 12px; height: 12px; }
+.zk-product-close path { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
+.zk-product-list { display: grid; gap: 3px; }
+.zk-product-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  min-height: 68px;
+  padding: 8px 11px 8px 9px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: var(--zk-text);
+  text-decoration: none;
+  transition: border-color var(--zk-duration-fast), background var(--zk-duration-fast), transform var(--zk-duration-fast) var(--zk-ease-expo);
+}
+.zk-product-row:hover,
+.zk-product-row:focus-visible {
+  border-color: rgba(10, 10, 10, 0.07);
+  background: #f6f6f3;
+  transform: translateX(2px);
+}
+.zk-product-row.is-current { background: var(--zk-accent-soft); }
+.zk-product-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--zk-hairline);
+  border-radius: 12px;
+  color: var(--zk-ink);
+  background: var(--zk-surface);
+  font-family: var(--zk-font-mono);
+  font-size: 16px;
+  font-weight: 650;
+}
+.zk-product-icon--gateway::before {
+  content: '';
+  width: 21px;
+  height: 21px;
+  background: currentColor;
+  -webkit-mask: url('/reason/assets/brand/zerker-mark.svg') center / contain no-repeat;
+  mask: url('/reason/assets/brand/zerker-mark.svg') center / contain no-repeat;
+}
+.zk-product-icon svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.zk-product-icon--console { color: var(--zk-accent); }
+.zk-product-icon--portals { color: var(--zk-success); }
+.zk-product-copy { min-width: 0; }
+.zk-product-copy strong,
+.zk-product-copy small { display: block; }
+.zk-product-copy strong {
+  margin-bottom: 4px;
+  color: var(--zk-ink);
+  font-family: var(--zk-font-sans);
+  font-size: 14px;
+  font-weight: 680;
+  letter-spacing: -0.015em;
+}
+.zk-product-copy small {
+  overflow: hidden;
+  color: var(--zk-text-secondary);
+  font-family: var(--zk-font-sans);
+  font-size: 12px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.zk-product-state {
+  padding: 5px 7px;
+  border: 1px solid var(--zk-hairline);
+  border-radius: 999px;
+  color: var(--zk-text-secondary);
+  font-family: var(--zk-font-mono);
+  font-size: 8px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.zk-product-row.is-current .zk-product-state { border-color: rgba(102, 86, 251, 0.22); color: var(--zk-accent); background: #fff; }
+.zk-related {
+  margin-top: 10px;
+  padding: 13px 8px 3px;
+  border-top: 1px solid var(--zk-hairline);
+}
+.zk-related > p { margin-bottom: 10px; }
+.zk-related > div { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.zk-related a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 10px;
+  border-radius: 10px;
+  color: var(--zk-text-secondary);
+  text-decoration: none;
+}
+.zk-related a:hover,
+.zk-related a:focus-visible { color: var(--zk-ink); background: #f6f6f3; }
+.zk-related a span,
+.zk-related a strong,
+.zk-related a small { display: block; min-width: 0; }
+.zk-related a strong { margin-bottom: 2px; color: var(--zk-ink); font-family: var(--zk-font-sans); font-size: 12px; }
+.zk-related a small { overflow: hidden; font-family: var(--zk-font-sans); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.zk-related a b { padding-left: 8px; color: var(--zk-text-secondary); font-size: 12px; font-weight: 450; }
+.zk-product-backdrop { display: none; }
+
+@media (max-width: 720px) {
+  :root { --zk-gutter: var(--zk-gutter-mobile); }
+  .zk-product-divider { margin-right: 5px; margin-left: 8px; }
+  .zk-product-trigger { min-height: 44px; padding-right: 5px; padding-left: 5px; }
+  .zk-product-close { width: 44px; height: 44px; }
+  .zk-product-panel {
+    position: fixed;
+    top: auto;
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    left: 10px;
+    z-index: 1102;
+    width: auto;
+    max-height: calc(100dvh - 20px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 22px;
+    opacity: 0;
+    transform: translateY(22px) scale(0.985);
+    transform-origin: 50% 100%;
+  }
+  .zk-product-family[data-open='true'] .zk-product-panel { transform: translateY(0) scale(1); }
+  .zk-product-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 49;
+    display: block;
+    border: 0;
+    background: rgba(10, 10, 10, 0.22);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition: opacity var(--zk-duration-base), visibility var(--zk-duration-base);
+  }
+  .zk-switcher-open .zk-product-backdrop {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .zk-switcher-open { overflow: hidden; }
+}
+
+@media (max-width: 430px) {
+  .zk-product-divider { height: 18px; margin-left: 6px; }
+  .zk-product-trigger { font-size: 8px; letter-spacing: 0.1em; }
+  .zk-product-row { grid-template-columns: 40px minmax(0, 1fr) auto; min-height: 64px; gap: 9px; }
+  .zk-product-icon { width: 40px; height: 40px; }
+  .zk-product-copy small { font-size: 11px; }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --zk-duration-fast: 0ms;
+    --zk-duration-base: 0ms;
+    --zk-duration-reveal: 0ms;
+  }
+}
+
+/* Reason keeps its own product character inside the shared Zerker shell. */
+.mark-glyph {
+  color: var(--zk-ink);
+  background: currentColor;
+  -webkit-mask: url('/reason/assets/brand/zerker-mark.svg') center / contain no-repeat;
+  mask: url('/reason/assets/brand/zerker-mark.svg') center / contain no-repeat;
+}
+.mark-glyph::before,
+.mark-glyph::after,
+.mark-glyph i { display: none; }
+.zk-product-family-ready .zr-brand > i,
+.zk-product-family-ready .zr-brand > span { display: none; }
+.zr-brand .zk-product-family { min-height: 40px; }
+.zr-brand .zk-product-panel { text-align: left; }
+@media (max-width: 720px) {
+  .zr-brand .wordmark b { font-size: 12px; }
+  .zr-brand .zk-product-divider { margin-left: 6px; }
+}
