@@ -37,6 +37,13 @@ fn capabilities_json_is_complete_and_deterministic() {
                 "action": ["zerker.reason.action.v1"],
                 "authorization": ["zerker.reason.authorization.v1"],
                 "authorization_bundle": ["zerker.reason.authorization-bundle.v1"],
+                "policy_source_manifest": ["zerker.reason.policy-source-manifest.v1"],
+                "policy_template": ["zerker.reason.policy-template.v1"],
+                "policy_bundle": ["zerker.reason.policy-bundle.v1"],
+                "policy_source_verification": ["zerker.reason.policy-source-verification.v1"],
+                "policy_authorization_input": ["zerker.reason.policy-authorization-input.v1"],
+                "policy_authorization": ["zerker.reason.policy-authorization.v1"],
+                "policy_authorization_verification_input": ["zerker.reason.policy-authorization-verification-input.v1"],
                 "release_authorization": ["zerker.reason.release-authorization.v1"],
                 "release_init": ["zerker.reason.release-init.v1"],
                 "verification": [
@@ -51,6 +58,7 @@ fn capabilities_json_is_complete_and_deterministic() {
                 "authorize",
                 "capabilities",
                 "check",
+                "policy",
                 "release",
                 "validate",
                 "verify",
@@ -74,7 +82,19 @@ fn capabilities_json_is_complete_and_deterministic() {
                 {"code": 3, "meaning": "disproved_or_denied"},
                 {"code": 4, "meaning": "inconsistent_or_conflicted"}
             ],
-            "limits": {"max_cli_input_bytes": 67_108_864}
+            "limits": {
+                "max_cli_input_bytes": 67_108_864,
+                "max_policy_sources": 256,
+                "max_policy_source_path_bytes": 4_096,
+                "max_policy_source_bytes": 1_048_576,
+                "max_policy_aggregate_source_bytes": 16_777_216,
+                "max_policy_source_manifest_bytes": 262_144,
+                "max_policy_template_bytes": 1_048_576,
+                "max_policy_bundle_bytes": 2_097_152,
+                "max_policy_authorization_input_bytes": 2_097_152,
+                "max_policy_authorization_output_bytes": 2_097_152,
+                "max_policy_authorization_verification_input_bytes": 4_194_304
+            }
         })
     );
 }
@@ -102,6 +122,9 @@ fn capabilities_text_is_concise_and_requires_no_input() {
         ))
         .stdout(predicate::str::contains(
             "Input limit: 67108864 bytes (64 MiB)",
+        ))
+        .stdout(predicate::str::contains(
+            "Policy limits: 256 sources | 1048576 bytes/source | 16777216 bytes aggregate",
         ))
         .stdout(predicate::str::contains("/tmp").not());
 }
@@ -802,4 +825,251 @@ fn verifier_rejects_a_tampered_proof() {
         .assert()
         .code(1)
         .stderr(predicate::str::contains("proof verification failed"));
+}
+
+#[test]
+fn policy_cli_locks_verifies_authorizes_and_independently_reverifies() {
+    let directory = tempfile::tempdir().unwrap();
+    let bundle_path = directory.path().join("policy-bundle.json");
+
+    let mut lock = Command::cargo_bin("reason").unwrap();
+    lock.args([
+        "policy",
+        "lock",
+        "--root",
+        "tests/fixtures/policy-sources",
+        "--manifest",
+        "examples/policy-source-manifest.json",
+        "--policy",
+        "examples/policy-template.json",
+        "--output",
+        bundle_path.to_str().unwrap(),
+    ])
+    .assert()
+    .success()
+    .stdout(predicate::str::starts_with("LOCKED_POLICY  sha256:"));
+
+    let before = std::fs::read(&bundle_path).unwrap();
+    let mut existing = Command::cargo_bin("reason").unwrap();
+    existing
+        .args([
+            "policy",
+            "lock",
+            "--root",
+            "tests/fixtures/policy-sources",
+            "--manifest",
+            "examples/policy-source-manifest.json",
+            "--policy",
+            "examples/policy-template.json",
+            "--output",
+            bundle_path.to_str().unwrap(),
+        ])
+        .assert()
+        .code(1)
+        .stderr(predicate::str::contains("policy output already exists"));
+    assert_eq!(std::fs::read(&bundle_path).unwrap(), before);
+
+    let mut verify_sources = Command::cargo_bin("reason").unwrap();
+    verify_sources
+        .args([
+            "--format",
+            "json",
+            "policy",
+            "verify-sources",
+            "--root",
+            "tests/fixtures/policy-sources",
+            bundle_path.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "\"schema\": \"zerker.reason.policy-source-verification.v1\"",
+        ));
+
+    let mut authorize = Command::cargo_bin("reason").unwrap();
+    let output = authorize
+        .args([
+            "--format",
+            "json",
+            "policy",
+            "authorize",
+            "examples/policy-authorization-input.json",
+        ])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let policy_authorization: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(
+        policy_authorization["schema"],
+        "zerker.reason.policy-authorization.v1"
+    );
+    assert_eq!(policy_authorization["authorization_status"], "authorized");
+    assert_eq!(
+        policy_authorization["authorization"]["request"]["action"]["arguments"]["ticket_id"],
+        "T-42"
+    );
+
+    let verification_input = serde_json::json!({
+        "schema": "zerker.reason.policy-authorization-verification-input.v1",
+        "policy_bundle": serde_json::from_slice::<serde_json::Value>(&before).unwrap(),
+        "policy_authorization": policy_authorization,
+    });
+    let mut verify = Command::cargo_bin("reason").unwrap();
+    verify
+        .args([
+            "--format",
+            "json",
+            "policy",
+            "verify-authorization",
+            "-",
+            "--require-authorized",
+        ])
+        .write_stdin(serde_json::to_vec(&verification_input).unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "\"authorization_status\": \"authorized\"",
+        ));
+}
+
+#[test]
+fn policy_cli_source_drift_and_tampered_atomic_result_fail_closed() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().join("sources");
+    for path in ["AGENTS.md", "CLAUDE.md", ".agents/skills/support/SKILL.md"] {
+        let target = root.join(path);
+        std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+        std::fs::copy(
+            std::path::Path::new("tests/fixtures/policy-sources").join(path),
+            target,
+        )
+        .unwrap();
+    }
+    let bundle = directory.path().join("bundle.json");
+    Command::cargo_bin("reason")
+        .unwrap()
+        .args([
+            "policy",
+            "lock",
+            "--root",
+            root.to_str().unwrap(),
+            "--manifest",
+            "examples/policy-source-manifest.json",
+            "--policy",
+            "examples/policy-template.json",
+            "--output",
+            bundle.to_str().unwrap(),
+        ])
+        .assert()
+        .success();
+    std::fs::write(root.join("AGENTS.md"), "drifted source\n").unwrap();
+    Command::cargo_bin("reason")
+        .unwrap()
+        .args([
+            "--format",
+            "json",
+            "policy",
+            "verify-sources",
+            "--root",
+            root.to_str().unwrap(),
+            bundle.to_str().unwrap(),
+        ])
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains("source drift"));
+
+    let input: serde_json::Value =
+        serde_json::from_slice(&std::fs::read("examples/policy-authorization-input.json").unwrap())
+            .unwrap();
+    let output = Command::cargo_bin("reason")
+        .unwrap()
+        .args(["--format", "json", "policy", "authorize", "-"])
+        .write_stdin(serde_json::to_vec(&input).unwrap())
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let mut authorization: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    authorization["authorization"]["request"]["action"]["arguments"]["ticket_id"] =
+        serde_json::json!("T-ATTACKER");
+    let verify_input = serde_json::json!({
+        "schema": "zerker.reason.policy-authorization-verification-input.v1",
+        "policy_bundle": input["policy_bundle"],
+        "policy_authorization": authorization,
+    });
+    Command::cargo_bin("reason")
+        .unwrap()
+        .args([
+            "--format",
+            "json",
+            "policy",
+            "verify-authorization",
+            "-",
+            "--require-authorized",
+        ])
+        .write_stdin(serde_json::to_vec(&verify_input).unwrap())
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains("request_digest: mismatch"));
+}
+
+#[test]
+fn policy_cli_preserves_unknown_denied_and_conflicted_exit_codes() {
+    let directory = tempfile::tempdir().unwrap();
+    let base_input: serde_json::Value =
+        serde_json::from_slice(&std::fs::read("examples/policy-authorization-input.json").unwrap())
+            .unwrap();
+    let base_policy: serde_json::Value =
+        serde_json::from_slice(&std::fs::read("examples/policy-template.json").unwrap()).unwrap();
+
+    for (name, expected_code) in [("unknown", 2), ("denied", 3), ("conflict", 4)] {
+        let mut policy = base_policy.clone();
+        match name {
+            "unknown" => policy["rules"] = serde_json::json!([]),
+            "denied" => policy["rules"][0]["then"]["negated"] = serde_json::json!(true),
+            "conflict" => {
+                let mut denial = policy["rules"][0].clone();
+                denial["id"] = serde_json::json!("deny_ticket_lookup");
+                denial["then"]["negated"] = serde_json::json!(true);
+                policy["rules"].as_array_mut().unwrap().push(denial);
+            }
+            _ => unreachable!(),
+        }
+        let policy_path = directory.path().join(format!("{name}-policy.json"));
+        let bundle_path = directory.path().join(format!("{name}-bundle.json"));
+        std::fs::write(&policy_path, serde_json::to_vec(&policy).unwrap()).unwrap();
+        Command::cargo_bin("reason")
+            .unwrap()
+            .args([
+                "policy",
+                "lock",
+                "--root",
+                "tests/fixtures/policy-sources",
+                "--manifest",
+                "examples/policy-source-manifest.json",
+                "--policy",
+                policy_path.to_str().unwrap(),
+                "--output",
+                bundle_path.to_str().unwrap(),
+            ])
+            .assert()
+            .success();
+        let mut input = base_input.clone();
+        input["policy_bundle"] =
+            serde_json::from_slice(&std::fs::read(&bundle_path).unwrap()).unwrap();
+        Command::cargo_bin("reason")
+            .unwrap()
+            .args(["--format", "json", "policy", "authorize", "-"])
+            .write_stdin(serde_json::to_vec(&input).unwrap())
+            .assert()
+            .code(expected_code)
+            .stdout(predicate::str::contains(format!(
+                "\"authorization_status\":\"{status}\"",
+                status = match name {
+                    "unknown" => "insufficient_evidence",
+                    "denied" => "denied",
+                    "conflict" => "conflicted",
+                    _ => unreachable!(),
+                }
+            )));
+    }
 }

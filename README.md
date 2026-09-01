@@ -122,6 +122,24 @@ AUTHORIZED  action_deploy_140 via mission_release_140
 
 Changed arguments invalidate the certificate. Unknown, denied, and conflicted results fail closed with actionable issues. Reason produces evidence; Gateway or another trusted boundary must compare and enforce the exact call. See [`docs/ACTIONS.md`](docs/ACTIONS.md).
 
+## Lock and authorize from reviewed organization policy
+
+Lock exact source-byte commitments together with a reviewed typed template, verify source drift separately, then let Reason construct the exact action request:
+
+```bash
+cargo run -- policy lock \
+  --root tests/fixtures/policy-sources \
+  --manifest examples/policy-source-manifest.json \
+  --policy examples/policy-template.json \
+  --output policy-bundle.json
+cargo run -- policy verify-sources \
+  --root tests/fixtures/policy-sources policy-bundle.json
+cargo run -- --format json policy authorize \
+  examples/policy-authorization-input.json > policy-authorization.json
+```
+
+Authorization consumes the locked bundle, explicit evaluation time, and boundary-owned mission/action only; it does not read the source files or ambient clock. Source inclusion commits bytes and metadata—it does not prove that a model read or understood Markdown. See [`docs/ORGANIZATION-POLICY-CONTRACT.md`](docs/ORGANIZATION-POLICY-CONTRACT.md).
+
 ## Preserve an authorization with Treeship
 
 Reason verifies the certificate semantics. Treeship separately verifies the signature, signer key, and artifact chain:
@@ -212,4 +230,4 @@ Zerker Reason is an independent reasoning service:
 - **Guard** enforces actions after reasoning.
 - **Treeship** records premise, ruleset, result, and proof commitments.
 
-See [`docs/QUICKSTART.md`](docs/QUICKSTART.md), [`docs/MIGRATING-0.2.md`](docs/MIGRATING-0.2.md), [`docs/PRODUCT.md`](docs/PRODUCT.md), [`docs/EXPERIENCE.md`](docs/EXPERIENCE.md), [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md), [`docs/AUTHORITY.md`](docs/AUTHORITY.md), [`docs/TRUTH.md`](docs/TRUTH.md), [`docs/TEMPORAL.md`](docs/TEMPORAL.md), [`docs/ACTIONS.md`](docs/ACTIONS.md), [`docs/PROOFS.md`](docs/PROOFS.md), [`docs/INTEGRATION_PROFILES.md`](docs/INTEGRATION_PROFILES.md), and [`docs/TREESHIP.md`](docs/TREESHIP.md).
+See [`docs/QUICKSTART.md`](docs/QUICKSTART.md), [`docs/MIGRATING-0.2.md`](docs/MIGRATING-0.2.md), [`docs/PRODUCT.md`](docs/PRODUCT.md), [`docs/EXPERIENCE.md`](docs/EXPERIENCE.md), [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md), [`docs/AUTHORITY.md`](docs/AUTHORITY.md), [`docs/TRUTH.md`](docs/TRUTH.md), [`docs/TEMPORAL.md`](docs/TEMPORAL.md), [`docs/ACTIONS.md`](docs/ACTIONS.md), [`docs/PROOFS.md`](docs/PROOFS.md), [`docs/INTEGRATION_PROFILES.md`](docs/INTEGRATION_PROFILES.md), [`docs/ORGANIZATION-POLICY-CONTRACT.md`](docs/ORGANIZATION-POLICY-CONTRACT.md), and [`docs/TREESHIP.md`](docs/TREESHIP.md).

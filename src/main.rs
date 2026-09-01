@@ -7,10 +7,7 @@ use std::{
 };
 
 use clap::{Parser, Subcommand, ValueEnum};
-use serde::{
-    Deserialize, Serialize,
-    de::{self, DeserializeOwned, MapAccess, SeqAccess, Visitor},
-};
+use serde::{Serialize, de::DeserializeOwned};
 use zerker_reason::{
     Atom, CheckResult, ERROR_SCHEMA, PROGRAM_SCHEMA, PROGRAM_SCHEMA_V2, Program, RESULT_SCHEMA,
     RESULT_SCHEMA_V2, Status, VERIFICATION_SCHEMA, VERIFICATION_SCHEMA_V2, VerificationResult,
@@ -21,10 +18,25 @@ use zerker_reason::{
         verify_authorization_bundle,
     },
     check,
+    policy::{
+        MAX_AGGREGATE_SOURCE_BYTES, MAX_POLICY_AUTHORIZATION_INPUT_BYTES,
+        MAX_POLICY_AUTHORIZATION_OUTPUT_BYTES, MAX_POLICY_AUTHORIZATION_VERIFICATION_INPUT_BYTES,
+        MAX_POLICY_BUNDLE_BYTES, MAX_POLICY_SOURCES, MAX_POLICY_TEMPLATE_BYTES,
+        MAX_PORTABLE_POLICY_PATH_BYTES, MAX_SOURCE_BYTES, MAX_SOURCE_MANIFEST_BYTES,
+        POLICY_AUTHORIZATION_INPUT_SCHEMA, POLICY_AUTHORIZATION_SCHEMA,
+        POLICY_AUTHORIZATION_VERIFICATION_INPUT_SCHEMA, POLICY_BUNDLE_SCHEMA,
+        POLICY_SOURCE_MANIFEST_SCHEMA, POLICY_SOURCE_VERIFICATION_SCHEMA, POLICY_TEMPLATE_SCHEMA,
+        PolicyAuthorizationInput, PolicyAuthorizationVerificationInput, authorize_policy,
+        lock_policy_bundle, parse_policy_authorization_input,
+        parse_policy_authorization_verification_input, parse_policy_bundle,
+        parse_policy_source_manifest, parse_policy_template, verify_policy_authorization,
+        verify_policy_sources,
+    },
     release::{
         RELEASE_AUTHORIZATION_SCHEMA, RELEASE_INIT_SCHEMA, ReleaseAuthorizationInput,
         compile_release_authorization,
     },
+    strict_json::parse_strict_json,
     validate, verify,
 };
 
@@ -81,10 +93,45 @@ enum Command {
         #[arg(long)]
         require_authorized: bool,
     },
+    /// Lock, verify, and authorize from reviewed organization policy bundles.
+    Policy {
+        #[command(subcommand)]
+        command: PolicyCommand,
+    },
     /// Build and evaluate the standard software-release authorization policy.
     Release {
         #[command(subcommand)]
         command: ReleaseCommand,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum PolicyCommand {
+    /// Lock exact source commitments and a reviewed typed policy into a new bundle.
+    Lock {
+        #[arg(long)]
+        root: PathBuf,
+        #[arg(long)]
+        manifest: PathBuf,
+        #[arg(long)]
+        policy: PathBuf,
+        #[arg(long)]
+        output: PathBuf,
+    },
+    /// Verify a locked bundle against current source bytes without modifying it.
+    VerifySources {
+        #[arg(long)]
+        root: PathBuf,
+        bundle: PathBuf,
+    },
+    /// Construct and evaluate an exact action from a locked policy bundle.
+    Authorize { input: PathBuf },
+    /// Independently re-expand and verify an atomic policy authorization.
+    VerifyAuthorization {
+        input: PathBuf,
+        /// Return the authorization status exit code after successful verification.
+        #[arg(long)]
+        require_authorized: bool,
     },
 }
 
@@ -264,7 +311,85 @@ fn run(cli: &Cli) -> Result<ExitCode, Box<dyn std::error::Error>> {
                 Ok(ExitCode::SUCCESS)
             }
         }
+        Command::Policy { command } => run_policy(cli.format, command),
         Command::Release { command } => run_release(cli.format, command),
+    }
+}
+
+fn run_policy(
+    format: OutputFormat,
+    command: &PolicyCommand,
+) -> Result<ExitCode, Box<dyn std::error::Error>> {
+    match command {
+        PolicyCommand::Lock {
+            root,
+            manifest,
+            policy,
+            output,
+        } => {
+            let manifest_bytes = read_path_bounded(manifest, MAX_SOURCE_MANIFEST_BYTES)?;
+            let policy_bytes = read_path_bounded(policy, MAX_POLICY_TEMPLATE_BYTES)?;
+            let manifest = parse_policy_source_manifest(&manifest_bytes)?;
+            let policy = parse_policy_template(&policy_bytes)?;
+            let bundle = lock_policy_bundle(root, &manifest, &policy)?;
+            let bundle_bytes =
+                bounded_json_bytes(&bundle, MAX_POLICY_BUNDLE_BYTES, "policy bundle")?;
+            write_output_set(vec![(output.clone(), bundle_bytes.clone())], "policy")?;
+            match format {
+                OutputFormat::Text => println!(
+                    "LOCKED_POLICY  {}\n               {} sources\nBundle written to {}",
+                    bundle.bundle_digest,
+                    bundle.sources.len(),
+                    output.display()
+                ),
+                OutputFormat::Json => io::stdout().lock().write_all(&bundle_bytes)?,
+            }
+            Ok(ExitCode::SUCCESS)
+        }
+        PolicyCommand::VerifySources { root, bundle } => {
+            let bytes = read_path_bounded(bundle, MAX_POLICY_BUNDLE_BYTES)?;
+            let bundle = parse_policy_bundle(&bytes)?;
+            let verification = verify_policy_sources(root, &bundle)?;
+            match format {
+                OutputFormat::Text => println!(
+                    "VERIFIED_POLICY_SOURCES  {} ({} sources)",
+                    verification.policy_bundle_digest, verification.sources_verified
+                ),
+                OutputFormat::Json => {
+                    println!("{}", serde_json::to_string_pretty(&verification)?)
+                }
+            }
+            Ok(ExitCode::SUCCESS)
+        }
+        PolicyCommand::Authorize { input } => {
+            let bytes = read_path_bounded(input, MAX_POLICY_AUTHORIZATION_INPUT_BYTES)?;
+            let input: PolicyAuthorizationInput = parse_policy_authorization_input(&bytes)?;
+            let result = authorize_policy(&input)?;
+            match format {
+                OutputFormat::Text => {
+                    println!("POLICY {}", result.policy_bundle_digest);
+                    print_authorization(&result.authorization.certificate, None);
+                }
+                OutputFormat::Json => print_bounded_policy_json(&result)?,
+            }
+            Ok(authorization_exit_code(result.authorization_status))
+        }
+        PolicyCommand::VerifyAuthorization {
+            input,
+            require_authorized,
+        } => {
+            let bytes =
+                read_path_bounded(input, MAX_POLICY_AUTHORIZATION_VERIFICATION_INPUT_BYTES)?;
+            let input: PolicyAuthorizationVerificationInput =
+                parse_policy_authorization_verification_input(&bytes)?;
+            let verification = verify_policy_authorization(&input)?;
+            print_authorization_verification_for_format(format, &verification)?;
+            if *require_authorized {
+                Ok(authorization_exit_code(verification.authorization_status))
+            } else {
+                Ok(ExitCode::SUCCESS)
+            }
+        }
     }
 }
 
@@ -294,7 +419,7 @@ fn run_release(
             if *force {
                 fs::write(output, bytes)?;
             } else {
-                write_output_set(vec![(output.clone(), bytes)])?;
+                write_output_set(vec![(output.clone(), bytes)], "release")?;
             }
             match format {
                 OutputFormat::Text => {
@@ -342,7 +467,7 @@ fn run_release(
             if let Some(path) = bundle_out {
                 outputs.push((path.clone(), pretty_json_bytes(&bundle)?));
             }
-            write_output_set(outputs)?;
+            write_output_set(outputs, "release")?;
             match format {
                 OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&result)?),
                 OutputFormat::Text => {
@@ -373,18 +498,46 @@ fn pretty_json_bytes(value: &impl serde::Serialize) -> Result<Vec<u8>, serde_jso
     Ok(bytes)
 }
 
-/// Stage every release artifact before publishing any of them. Hard links make
-/// each destination a create-if-absent operation, so aliases and partial writes
+fn bounded_json_bytes(
+    value: &impl serde::Serialize,
+    limit: usize,
+    label: &str,
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let mut bytes = serde_json::to_vec(value)?;
+    if bytes.len() + 1 > limit {
+        return Err(format!("{label} JSON exceeds the {limit}-byte limit").into());
+    }
+    bytes.push(b'\n');
+    Ok(bytes)
+}
+
+fn print_bounded_policy_json(
+    value: &impl serde::Serialize,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let bytes = bounded_json_bytes(
+        value,
+        MAX_POLICY_AUTHORIZATION_OUTPUT_BYTES,
+        "policy authorization output",
+    )?;
+    io::stdout().lock().write_all(&bytes)?;
+    Ok(())
+}
+
+/// Stage every artifact before publishing any of them. Hard links make each
+/// destination a create-if-absent operation, so aliases and partial writes
 /// cannot silently replace a different artifact.
-fn write_output_set(outputs: Vec<(PathBuf, Vec<u8>)>) -> Result<(), Box<dyn std::error::Error>> {
+fn write_output_set(
+    outputs: Vec<(PathBuf, Vec<u8>)>,
+    context: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut identities = BTreeSet::new();
     for (path, _) in &outputs {
-        let identity = output_identity(path)?;
+        let identity = output_identity(path, context)?;
         if !identities.insert(identity) {
-            return Err(format!("duplicate release output path: {}", path.display()).into());
+            return Err(format!("duplicate {context} output path: {}", path.display()).into());
         }
         if path.exists() {
-            return Err(format!("release output already exists: {}", path.display()).into());
+            return Err(format!("{context} output already exists: {}", path.display()).into());
         }
     }
 
@@ -396,7 +549,7 @@ fn write_output_set(outputs: Vec<(PathBuf, Vec<u8>)>) -> Result<(), Box<dyn std:
             .unwrap_or(Path::new("."));
         let name = path
             .file_name()
-            .ok_or_else(|| format!("release output has no file name: {}", path.display()))?;
+            .ok_or_else(|| format!("{context} output has no file name: {}", path.display()))?;
         let temporary = parent.join(format!(
             ".{}.reason-stage-{}-{index}",
             name.to_string_lossy(),
@@ -435,7 +588,7 @@ fn write_output_set(outputs: Vec<(PathBuf, Vec<u8>)>) -> Result<(), Box<dyn std:
     Ok(())
 }
 
-fn output_identity(path: &Path) -> Result<PathBuf, Box<dyn std::error::Error>> {
+fn output_identity(path: &Path, context: &str) -> Result<PathBuf, Box<dyn std::error::Error>> {
     let parent = path
         .parent()
         .filter(|value| !value.as_os_str().is_empty())
@@ -443,7 +596,7 @@ fn output_identity(path: &Path) -> Result<PathBuf, Box<dyn std::error::Error>> {
     let canonical_parent = fs::canonicalize(parent)?;
     let name = path
         .file_name()
-        .ok_or_else(|| format!("release output has no file name: {}", path.display()))?;
+        .ok_or_else(|| format!("{context} output has no file name: {}", path.display()))?;
     Ok(canonical_parent.join(name))
 }
 
@@ -455,6 +608,7 @@ const COMMAND_NAMES: &[&str] = &[
     "authorize",
     "capabilities",
     "check",
+    "policy",
     "release",
     "validate",
     "verify",
@@ -514,6 +668,13 @@ struct CapabilitySchemaIdentifiers {
     action: &'static [&'static str],
     authorization: &'static [&'static str],
     authorization_bundle: &'static [&'static str],
+    policy_source_manifest: &'static [&'static str],
+    policy_template: &'static [&'static str],
+    policy_bundle: &'static [&'static str],
+    policy_source_verification: &'static [&'static str],
+    policy_authorization_input: &'static [&'static str],
+    policy_authorization: &'static [&'static str],
+    policy_authorization_verification_input: &'static [&'static str],
     release_authorization: &'static [&'static str],
     release_init: &'static [&'static str],
     verification: &'static [&'static str],
@@ -530,6 +691,16 @@ struct CapabilityExitCode {
 #[derive(Debug, Serialize)]
 struct CapabilityLimits {
     max_cli_input_bytes: u64,
+    max_policy_sources: usize,
+    max_policy_source_path_bytes: usize,
+    max_policy_source_bytes: u64,
+    max_policy_aggregate_source_bytes: u64,
+    max_policy_source_manifest_bytes: usize,
+    max_policy_template_bytes: usize,
+    max_policy_bundle_bytes: usize,
+    max_policy_authorization_input_bytes: usize,
+    max_policy_authorization_output_bytes: usize,
+    max_policy_authorization_verification_input_bytes: usize,
 }
 
 fn capabilities() -> Capabilities {
@@ -543,6 +714,15 @@ fn capabilities() -> Capabilities {
             action: &[ACTION_REQUEST_SCHEMA],
             authorization: &[AUTHORIZATION_RESULT_SCHEMA],
             authorization_bundle: &[AUTHORIZATION_BUNDLE_SCHEMA],
+            policy_source_manifest: &[POLICY_SOURCE_MANIFEST_SCHEMA],
+            policy_template: &[POLICY_TEMPLATE_SCHEMA],
+            policy_bundle: &[POLICY_BUNDLE_SCHEMA],
+            policy_source_verification: &[POLICY_SOURCE_VERIFICATION_SCHEMA],
+            policy_authorization_input: &[POLICY_AUTHORIZATION_INPUT_SCHEMA],
+            policy_authorization: &[POLICY_AUTHORIZATION_SCHEMA],
+            policy_authorization_verification_input: &[
+                POLICY_AUTHORIZATION_VERIFICATION_INPUT_SCHEMA,
+            ],
             release_authorization: &[RELEASE_AUTHORIZATION_SCHEMA],
             release_init: &[RELEASE_INIT_SCHEMA],
             verification: &[
@@ -562,6 +742,17 @@ fn capabilities() -> Capabilities {
         exit_codes: EXIT_CODES,
         limits: CapabilityLimits {
             max_cli_input_bytes: MAX_INPUT_BYTES,
+            max_policy_sources: MAX_POLICY_SOURCES,
+            max_policy_source_path_bytes: MAX_PORTABLE_POLICY_PATH_BYTES,
+            max_policy_source_bytes: MAX_SOURCE_BYTES,
+            max_policy_aggregate_source_bytes: MAX_AGGREGATE_SOURCE_BYTES,
+            max_policy_source_manifest_bytes: MAX_SOURCE_MANIFEST_BYTES,
+            max_policy_template_bytes: MAX_POLICY_TEMPLATE_BYTES,
+            max_policy_bundle_bytes: MAX_POLICY_BUNDLE_BYTES,
+            max_policy_authorization_input_bytes: MAX_POLICY_AUTHORIZATION_INPUT_BYTES,
+            max_policy_authorization_output_bytes: MAX_POLICY_AUTHORIZATION_OUTPUT_BYTES,
+            max_policy_authorization_verification_input_bytes:
+                MAX_POLICY_AUTHORIZATION_VERIFICATION_INPUT_BYTES,
         },
     }
 }
@@ -594,6 +785,49 @@ fn print_capabilities(capabilities: &Capabilities) {
         capabilities
             .schema_identifiers
             .authorization_bundle
+            .join(" | ")
+    );
+    println!(
+        "  policy source manifest: {}",
+        capabilities
+            .schema_identifiers
+            .policy_source_manifest
+            .join(" | ")
+    );
+    println!(
+        "  policy template: {}",
+        capabilities.schema_identifiers.policy_template.join(" | ")
+    );
+    println!(
+        "  policy bundle: {}",
+        capabilities.schema_identifiers.policy_bundle.join(" | ")
+    );
+    println!(
+        "  policy source verification: {}",
+        capabilities
+            .schema_identifiers
+            .policy_source_verification
+            .join(" | ")
+    );
+    println!(
+        "  policy authorization input: {}",
+        capabilities
+            .schema_identifiers
+            .policy_authorization_input
+            .join(" | ")
+    );
+    println!(
+        "  policy authorization: {}",
+        capabilities
+            .schema_identifiers
+            .policy_authorization
+            .join(" | ")
+    );
+    println!(
+        "  policy authorization verification input: {}",
+        capabilities
+            .schema_identifiers
+            .policy_authorization_verification_input
             .join(" | ")
     );
     println!(
@@ -643,6 +877,12 @@ fn print_capabilities(capabilities: &Capabilities) {
         "Input limit: {} bytes (64 MiB)",
         capabilities.limits.max_cli_input_bytes
     );
+    println!(
+        "Policy limits: {} sources | {} bytes/source | {} bytes aggregate",
+        capabilities.limits.max_policy_sources,
+        capabilities.limits.max_policy_source_bytes,
+        capabilities.limits.max_policy_aggregate_source_bytes
+    );
 }
 
 fn load<T: DeserializeOwned>(path: &PathBuf) -> Result<T, Box<dyn std::error::Error>> {
@@ -654,113 +894,31 @@ fn load<T: DeserializeOwned>(path: &PathBuf) -> Result<T, Box<dyn std::error::Er
     Ok(parse_unique_json(&text)?)
 }
 
-/// Parse through an untyped tree first so duplicate object members are rejected
-/// recursively, including inside user-defined maps. Then reject every member
-/// the selected versioned schema does not consume. Otherwise one component can
-/// act on a field that Reason silently ignored when authorizing the request.
+fn read_path_bounded(path: &Path, limit: usize) -> io::Result<Vec<u8>> {
+    let mut bytes = Vec::new();
+    if path.as_os_str() == "-" {
+        io::stdin()
+            .lock()
+            .take(limit as u64 + 1)
+            .read_to_end(&mut bytes)?;
+    } else {
+        fs::File::open(path)?
+            .take(limit as u64 + 1)
+            .read_to_end(&mut bytes)?;
+    }
+    if bytes.len() > limit {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("input exceeds the {limit}-byte limit"),
+        ));
+    }
+    Ok(bytes)
+}
+
+/// Keep all CLI contracts on the same strict duplicate/unknown-member parser
+/// used by organization-policy parsing.
 fn parse_unique_json<T: DeserializeOwned>(text: &str) -> Result<T, serde_json::Error> {
-    let mut deserializer = serde_json::Deserializer::from_str(text);
-    let value = UniqueJsonValue::deserialize(&mut deserializer)?.0;
-    deserializer.end()?;
-
-    let mut ignored = None;
-    let parsed = serde_ignored::deserialize(value, |path| {
-        if ignored.is_none() {
-            ignored = Some(path.to_string());
-        }
-    })?;
-    match ignored {
-        None => Ok(parsed),
-        Some(path) => Err(de::Error::custom(format!(
-            "unknown object member at {path}"
-        ))),
-    }
-}
-
-struct UniqueJsonValue(serde_json::Value);
-
-impl<'de> Deserialize<'de> for UniqueJsonValue {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        deserializer.deserialize_any(UniqueJsonVisitor)
-    }
-}
-
-struct UniqueJsonVisitor;
-
-impl<'de> Visitor<'de> for UniqueJsonVisitor {
-    type Value = UniqueJsonValue;
-
-    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str("a JSON value with unique object members")
-    }
-
-    fn visit_bool<E>(self, value: bool) -> Result<Self::Value, E> {
-        Ok(UniqueJsonValue(serde_json::Value::Bool(value)))
-    }
-
-    fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E> {
-        Ok(UniqueJsonValue(serde_json::Value::Number(value.into())))
-    }
-
-    fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E> {
-        Ok(UniqueJsonValue(serde_json::Value::Number(value.into())))
-    }
-
-    fn visit_f64<E>(self, value: f64) -> Result<Self::Value, E>
-    where
-        E: de::Error,
-    {
-        let number = serde_json::Number::from_f64(value)
-            .ok_or_else(|| E::custom("non-finite JSON number"))?;
-        Ok(UniqueJsonValue(serde_json::Value::Number(number)))
-    }
-
-    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E> {
-        Ok(UniqueJsonValue(serde_json::Value::String(value.to_owned())))
-    }
-
-    fn visit_string<E>(self, value: String) -> Result<Self::Value, E> {
-        Ok(UniqueJsonValue(serde_json::Value::String(value)))
-    }
-
-    fn visit_none<E>(self) -> Result<Self::Value, E> {
-        Ok(UniqueJsonValue(serde_json::Value::Null))
-    }
-
-    fn visit_unit<E>(self) -> Result<Self::Value, E> {
-        Ok(UniqueJsonValue(serde_json::Value::Null))
-    }
-
-    fn visit_seq<A>(self, mut sequence: A) -> Result<Self::Value, A::Error>
-    where
-        A: SeqAccess<'de>,
-    {
-        let mut values = Vec::new();
-        while let Some(value) = sequence.next_element::<UniqueJsonValue>()? {
-            values.push(value.0);
-        }
-        Ok(UniqueJsonValue(serde_json::Value::Array(values)))
-    }
-
-    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
-    where
-        A: MapAccess<'de>,
-    {
-        let mut values = serde_json::Map::new();
-        while let Some(key) = map.next_key::<String>()? {
-            if values.contains_key(&key) {
-                return Err(de::Error::custom(format!(
-                    "duplicate object member `{key}`"
-                )));
-            }
-            let value = map.next_value::<UniqueJsonValue>()?;
-            values.insert(key, value.0);
-        }
-        Ok(UniqueJsonValue(serde_json::Value::Object(values)))
-    }
+    parse_strict_json(text)
 }
 
 fn read_bounded(reader: impl Read, limit: u64) -> io::Result<String> {
