@@ -246,8 +246,9 @@
   -webkit-mask: url('/reason/assets/brand/zerker-mark.svg') center / contain no-repeat;
   mask: url('/reason/assets/brand/zerker-mark.svg') center / contain no-repeat;
 }
-.zk-product-icon--reason { color: var(--zk-accent); font-size: 21px; letter-spacing: -0.1em; }
-.zk-product-icon--guard { color: #196f5b; }
+.zk-product-icon svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.zk-product-icon--console { color: var(--zk-accent); }
+.zk-product-icon--portals { color: var(--zk-success); }
 .zk-product-copy { min-width: 0; }
 .zk-product-copy strong,
 .zk-product-copy small { display: block; }
