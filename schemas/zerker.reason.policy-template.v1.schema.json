@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "zerker.reason.policy-template.v1.schema.json",
+  "title": "zerker.reason.policy-template.v1",
+  "description": "A reviewed typed policy template without a per-request query or evaluation time.",
+  "$ref": "zerker.reason.contracts.v1.schema.json#/$defs/policyTemplate"
+}

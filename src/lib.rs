@@ -7,7 +7,9 @@ use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 pub mod action;
+pub mod policy;
 pub mod release;
+pub mod strict_json;
 
 pub const PROGRAM_SCHEMA: &str = "zerker.reason.program.v1";
 pub const PROGRAM_SCHEMA_V2: &str = "zerker.reason.program.v2";

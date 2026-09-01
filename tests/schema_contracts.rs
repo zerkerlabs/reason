@@ -9,6 +9,14 @@ use zerker_reason::{
         AUTHORIZATION_VERIFICATION_SCHEMA, ActionRequest, AuthorizationBundle, AuthorizationResult,
         authorize, verify_authorization,
     },
+    policy::{
+        POLICY_AUTHORIZATION_INPUT_SCHEMA, POLICY_AUTHORIZATION_SCHEMA,
+        POLICY_AUTHORIZATION_VERIFICATION_INPUT_SCHEMA, POLICY_BUNDLE_SCHEMA,
+        POLICY_SOURCE_MANIFEST_SCHEMA, POLICY_SOURCE_VERIFICATION_SCHEMA, POLICY_TEMPLATE_SCHEMA,
+        PolicyAuthorizationInput, PolicyAuthorizationVerificationInput, authorize_policy,
+        lock_policy_bundle, parse_policy_source_manifest, parse_policy_template,
+        verify_policy_sources,
+    },
     release::{RELEASE_AUTHORIZATION_SCHEMA, RELEASE_INIT_SCHEMA, ReleaseAuthorizationInput},
 };
 
@@ -31,6 +39,68 @@ fn authorized_values() -> (Value, Value, Value) {
         serde_json::to_value(request).unwrap(),
         serde_json::to_value(certificate).unwrap(),
         serde_json::to_value(verification).unwrap(),
+    )
+}
+
+fn policy_values() -> (Value, Value, Value) {
+    let manifest =
+        parse_policy_source_manifest(include_bytes!("../examples/policy-source-manifest.json"))
+            .unwrap();
+    let policy = parse_policy_template(include_bytes!("../examples/policy-template.json")).unwrap();
+    let bundle = lock_policy_bundle(
+        Path::new("tests/fixtures/policy-sources"),
+        &manifest,
+        &policy,
+    )
+    .unwrap();
+    (
+        serde_json::to_value(manifest).unwrap(),
+        serde_json::to_value(policy).unwrap(),
+        serde_json::to_value(bundle).unwrap(),
+    )
+}
+
+fn policy_authorization_values() -> (Value, Value, Value, Value) {
+    let manifest =
+        parse_policy_source_manifest(include_bytes!("../examples/policy-source-manifest.json"))
+            .unwrap();
+    let policy = parse_policy_template(include_bytes!("../examples/policy-template.json")).unwrap();
+    let bundle = lock_policy_bundle(
+        Path::new("tests/fixtures/policy-sources"),
+        &manifest,
+        &policy,
+    )
+    .unwrap();
+    let source_verification =
+        verify_policy_sources(Path::new("tests/fixtures/policy-sources"), &bundle).unwrap();
+    let action_request: ActionRequest =
+        serde_json::from_value(load_json("examples/authorize-deploy.json")).unwrap();
+    let mut action = action_request.action;
+    action.id = "invocation_schema_fixture".to_owned();
+    action.tool = "lookup_ticket".to_owned();
+    action.arguments = [("ticket_id".to_owned(), json!("T-42"))]
+        .into_iter()
+        .collect();
+    action.effects.clear();
+    action.proposed_at = "2026-08-14T12:00:00Z".to_owned();
+    let input = PolicyAuthorizationInput {
+        schema: POLICY_AUTHORIZATION_INPUT_SCHEMA.to_owned(),
+        policy_bundle: bundle.clone(),
+        evaluation_time: "2026-08-14T12:00:00Z".to_owned(),
+        mission: action_request.mission,
+        action,
+    };
+    let authorization = authorize_policy(&input).unwrap();
+    let verification_input = PolicyAuthorizationVerificationInput {
+        schema: POLICY_AUTHORIZATION_VERIFICATION_INPUT_SCHEMA.to_owned(),
+        policy_bundle: bundle,
+        policy_authorization: authorization.clone(),
+    };
+    (
+        serde_json::to_value(source_verification).unwrap(),
+        serde_json::to_value(input).unwrap(),
+        serde_json::to_value(authorization).unwrap(),
+        serde_json::to_value(verification_input).unwrap(),
     )
 }
 
@@ -91,6 +161,41 @@ fn entry_schemas_match_rust_wire_identifiers_and_catalog_definitions() {
             "authorizationVerification",
             "zerker.reason.authorization-verification.v1.schema.json",
         ),
+        (
+            POLICY_SOURCE_MANIFEST_SCHEMA,
+            "policySourceManifest",
+            "zerker.reason.policy-source-manifest.v1.schema.json",
+        ),
+        (
+            POLICY_TEMPLATE_SCHEMA,
+            "policyTemplate",
+            "zerker.reason.policy-template.v1.schema.json",
+        ),
+        (
+            POLICY_BUNDLE_SCHEMA,
+            "policyBundle",
+            "zerker.reason.policy-bundle.v1.schema.json",
+        ),
+        (
+            POLICY_SOURCE_VERIFICATION_SCHEMA,
+            "policySourceVerification",
+            "zerker.reason.policy-source-verification.v1.schema.json",
+        ),
+        (
+            POLICY_AUTHORIZATION_INPUT_SCHEMA,
+            "policyAuthorizationInput",
+            "zerker.reason.policy-authorization-input.v1.schema.json",
+        ),
+        (
+            POLICY_AUTHORIZATION_SCHEMA,
+            "policyAuthorization",
+            "zerker.reason.policy-authorization.v1.schema.json",
+        ),
+        (
+            POLICY_AUTHORIZATION_VERIFICATION_INPUT_SCHEMA,
+            "policyAuthorizationVerificationInput",
+            "zerker.reason.policy-authorization-verification-input.v1.schema.json",
+        ),
         (ERROR_SCHEMA, "error", "zerker.reason.error.v1.schema.json"),
         (
             RELEASE_AUTHORIZATION_SCHEMA,
@@ -136,6 +241,9 @@ fn entry_schemas_resolve_the_committed_catalog() {
         .prepare()
         .unwrap();
     let (request, certificate, verification) = authorized_values();
+    let (manifest, policy, policy_bundle) = policy_values();
+    let (source_verification, policy_input, policy_authorization, policy_verification_input) =
+        policy_authorization_values();
     let cases = [
         ("zerker.reason.action.v1.schema.json", request.clone()),
         (
@@ -153,6 +261,28 @@ fn entry_schemas_resolve_the_committed_catalog() {
         (
             "zerker.reason.authorization-verification.v1.schema.json",
             verification,
+        ),
+        (
+            "zerker.reason.policy-source-manifest.v1.schema.json",
+            manifest,
+        ),
+        ("zerker.reason.policy-template.v1.schema.json", policy),
+        ("zerker.reason.policy-bundle.v1.schema.json", policy_bundle),
+        (
+            "zerker.reason.policy-source-verification.v1.schema.json",
+            source_verification,
+        ),
+        (
+            "zerker.reason.policy-authorization-input.v1.schema.json",
+            policy_input,
+        ),
+        (
+            "zerker.reason.policy-authorization.v1.schema.json",
+            policy_authorization,
+        ),
+        (
+            "zerker.reason.policy-authorization-verification-input.v1.schema.json",
+            policy_verification_input,
         ),
         (
             "zerker.reason.error.v1.schema.json",
@@ -185,6 +315,68 @@ fn entry_schemas_resolve_the_committed_catalog() {
             .unwrap();
         assert!(validator.is_valid(&instance), "{filename} did not resolve");
     }
+}
+
+#[test]
+fn policy_fixtures_and_locked_bundle_match_their_schemas() {
+    let (manifest, policy, bundle) = policy_values();
+    assert_valid("policySourceManifest", &manifest);
+    assert_valid("policyTemplate", &policy);
+    assert_valid("policyBundle", &bundle);
+
+    let mut unknown = manifest.clone();
+    unknown["sources"][0]["grants_authority"] = json!(true);
+    assert_invalid("policySourceManifest", &unknown);
+
+    for path in [
+        "../escape",
+        "a/../escape",
+        "./policy",
+        "a/./policy",
+        "a//policy",
+        "C:/drive",
+        "file:policy",
+        "c1\u{0085}name",
+        "bidi\u{202e}name",
+    ] {
+        let mut invalid_path = manifest.clone();
+        invalid_path["sources"][0]["path"] = json!(path);
+        assert_invalid("policySourceManifest", &invalid_path);
+    }
+
+    let mut injected = policy.clone();
+    injected["query"] = json!({"predicate": "allow_all"});
+    assert_invalid("policyTemplate", &injected);
+
+    let mut malformed = bundle;
+    malformed["bundle_digest"] = json!("sha256:not-a-digest");
+    assert_invalid("policyBundle", &malformed);
+}
+
+#[test]
+fn policy_authorization_contracts_match_generated_values_and_reject_drift() {
+    let (source_verification, input, authorization, verification_input) =
+        policy_authorization_values();
+    assert_valid("policySourceVerification", &source_verification);
+    assert_valid("policyAuthorizationInput", &input);
+    assert_valid(
+        "policyAuthorizationInput",
+        &load_json("examples/policy-authorization-input.json"),
+    );
+    assert_valid("policyAuthorization", &authorization);
+    assert_valid("policyAuthorizationVerificationInput", &verification_input);
+
+    let mut injected = input;
+    injected["query"] = json!({"predicate":"allow_all"});
+    assert_invalid("policyAuthorizationInput", &injected);
+
+    let mut malformed = authorization;
+    malformed["authorization_status"] = json!("bypassed");
+    assert_invalid("policyAuthorization", &malformed);
+
+    let mut unknown = verification_input;
+    unknown["accept_without_reexpansion"] = json!(true);
+    assert_invalid("policyAuthorizationVerificationInput", &unknown);
 }
 
 #[test]

@@ -1,6 +1,6 @@
 {
   "schema": "zerker.demo.reason-fixtures.v1",
-  "generator": "reason 0.2.0",
+  "generator": "reason 0.3.0",
   "scenarios": {
     "authorized": {
       "status": "authorized",

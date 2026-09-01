@@ -12,12 +12,12 @@ fn cargo_version() -> String {
 }
 
 #[test]
-fn v020_versions_and_public_fixture_metadata_agree() {
+fn v030_versions_and_public_fixture_metadata_agree() {
     let version = cargo_version();
-    assert_eq!(version, "0.2.0");
+    assert_eq!(version, "0.3.0");
 
     let lock = fs::read_to_string("Cargo.lock").unwrap();
-    assert!(lock.contains("name = \"zerker-reason\"\nversion = \"0.2.0\""));
+    assert!(lock.contains("name = \"zerker-reason\"\nversion = \"0.3.0\""));
 
     if Path::new("website").exists() {
         let manifest: Value =
@@ -27,6 +27,7 @@ fn v020_versions_and_public_fixture_metadata_agree() {
     }
 
     let changelog = fs::read_to_string("CHANGELOG.md").unwrap();
+    assert!(changelog.contains("## [0.3.0] - 2026-09-01"));
     assert!(changelog.contains("## [0.2.0] - 2026-08-21"));
     assert!(fs::read_to_string("docs/MIGRATING-0.2.md").is_ok());
     assert!(fs::read_to_string("docs/V0.2-COMPATIBILITY.md").is_ok());

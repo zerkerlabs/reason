@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-01
+
+### Added
+
+- Commit exact source bytes with versioned policy source manifests, normalized portable paths, and no-follow traversal.
+- Lock reviewed typed policy and source commitments into a deterministic, digest-bound policy bundle.
+- Verify a locked bundle against current source bytes without modifying it, so source drift is detectable.
+- Construct and evaluate an exact action from a locked bundle, returning one atomic request and certificate.
+- Independently re-expand and verify a policy authorization without trusting the issuing process.
+- Publish Draft 2020-12 schemas for policy source manifests, templates, bundles, authorization input, authorization, and verification input.
+
+### Notes
+
+- Reason still evaluates reviewed typed policy. It does not interpret instruction files into policy, and it does not prove that a model read them.
+
+
 ## [0.2.0] - 2026-08-21
 
 ### Added

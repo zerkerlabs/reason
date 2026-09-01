@@ -1,0 +1,20 @@
+{
+  "schema": "zerker.reason.policy-source-manifest.v1",
+  "sources": [
+    {
+      "path": ".agents/skills/support/SKILL.md",
+      "kind": "skill",
+      "scope": "organization"
+    },
+    {
+      "path": "CLAUDE.md",
+      "kind": "instruction",
+      "scope": "repository"
+    },
+    {
+      "path": "AGENTS.md",
+      "kind": "instruction",
+      "scope": "repository"
+    }
+  ]
+}

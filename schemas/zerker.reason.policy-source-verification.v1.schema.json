@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "zerker.reason.policy-source-verification.v1.schema.json",
+  "title": "zerker.reason.policy-source-verification.v1",
+  "description": "A successful bounded verification of current policy source bytes against a locked policy bundle.",
+  "$ref": "zerker.reason.contracts.v1.schema.json#/$defs/policySourceVerification"
+}

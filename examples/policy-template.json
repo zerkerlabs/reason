@@ -1,0 +1,29 @@
+{
+  "schema": "zerker.reason.policy-template.v1",
+  "ontology": {
+    "id": "example_organization_policy",
+    "version": "1",
+    "predicates": {}
+  },
+  "authority": {
+    "classes": ["human-authorized"],
+    "default_admit": ["human-authorized"],
+    "predicate_admit": {}
+  },
+  "facts": [],
+  "rules": [
+    {
+      "id": "allow_ticket_lookup",
+      "when": [
+        {
+          "predicate": "action_tool",
+          "arguments": ["$action", "lookup_ticket"]
+        }
+      ],
+      "then": {
+        "predicate": "action_authorized",
+        "arguments": ["$action"]
+      }
+    }
+  ]
+}

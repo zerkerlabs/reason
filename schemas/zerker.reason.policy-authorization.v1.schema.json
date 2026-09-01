@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "zerker.reason.policy-authorization.v1.schema.json",
+  "title": "zerker.reason.policy-authorization.v1",
+  "description": "An atomic exact action request and authorization certificate bound to a deterministic policy bundle and reasoning summary.",
+  "$ref": "zerker.reason.contracts.v1.schema.json#/$defs/policyAuthorization"
+}

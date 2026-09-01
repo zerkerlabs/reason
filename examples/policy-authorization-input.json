@@ -1,0 +1,89 @@
+{
+  "schema": "zerker.reason.policy-authorization-input.v1",
+  "policy_bundle": {
+    "schema": "zerker.reason.policy-bundle.v1",
+    "bundle_digest": "sha256:8aa3219d40f9ca9362fe25b3c4e1ea26f38a60cffc909e4806be2642b96f4f39",
+    "sources": [
+      {
+        "path": ".agents/skills/support/SKILL.md",
+        "kind": "skill",
+        "scope": "organization",
+        "size_bytes": 56,
+        "digest": "sha256:08bfdeb17c809463c5b7b407b6fb4bf5898effba559eb3029f2442044d2a4386"
+      },
+      {
+        "path": "AGENTS.md",
+        "kind": "instruction",
+        "scope": "repository",
+        "size_bytes": 63,
+        "digest": "sha256:d9046724b5e4dcf253d597e854970672d42e24fbe9201af94f8f821e0af4954a"
+      },
+      {
+        "path": "CLAUDE.md",
+        "kind": "instruction",
+        "scope": "repository",
+        "size_bytes": 88,
+        "digest": "sha256:22ed2f33a55f64ba79e3a07d6524970dcf137f9e74a9f0b6daf74e7f2c86530c"
+      }
+    ],
+    "policy": {
+      "schema": "zerker.reason.policy-template.v1",
+      "ontology": {
+        "id": "example_organization_policy",
+        "version": "1",
+        "predicates": {}
+      },
+      "authority": {
+        "classes": [
+          "human-authorized"
+        ],
+        "default_admit": [
+          "human-authorized"
+        ],
+        "predicate_admit": {}
+      },
+      "facts": [],
+      "rules": [
+        {
+          "id": "allow_ticket_lookup",
+          "when": [
+            {
+              "predicate": "action_tool",
+              "arguments": [
+                "$action",
+                "lookup_ticket"
+              ]
+            }
+          ],
+          "then": {
+            "predicate": "action_authorized",
+            "arguments": [
+              "$action"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "evaluation_time": "2026-08-29T12:00:00Z",
+  "mission": {
+    "id": "mission_support_42",
+    "principal": "user:123",
+    "instruction_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "issued_at": "2026-08-29T11:00:00Z",
+    "valid_until": "2026-08-29T13:00:00Z",
+    "constraints": {
+      "gateway.tenant_id": "tenant_123",
+      "gateway.agent_id": "agent_456"
+    }
+  },
+  "action": {
+    "id": "invocation_789",
+    "tool": "lookup_ticket",
+    "proposed_at": "2026-08-29T12:00:00Z",
+    "arguments": {
+      "ticket_id": "T-42"
+    },
+    "effects": []
+  }
+}
