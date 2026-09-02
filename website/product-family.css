@@ -78,8 +78,8 @@
   height: 24px;
   flex: 0 0 24px;
   background: currentColor;
-  -webkit-mask: url('/reason/assets/brand/zerker-mark.svg') center / contain no-repeat;
-  mask: url('/reason/assets/brand/zerker-mark.svg') center / contain no-repeat;
+  -webkit-mask: url('/reason/assets/brand/zerker-mark.svg?v=2') center / contain no-repeat;
+  mask: url('/reason/assets/brand/zerker-mark.svg?v=2') center / contain no-repeat;
 }
 .zk-brand--light { color: #fff; }
 
@@ -243,8 +243,8 @@
   width: 21px;
   height: 21px;
   background: currentColor;
-  -webkit-mask: url('/reason/assets/brand/zerker-mark.svg') center / contain no-repeat;
-  mask: url('/reason/assets/brand/zerker-mark.svg') center / contain no-repeat;
+  -webkit-mask: url('/reason/assets/brand/zerker-mark.svg?v=2') center / contain no-repeat;
+  mask: url('/reason/assets/brand/zerker-mark.svg?v=2') center / contain no-repeat;
 }
 .zk-product-icon svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .zk-product-icon--console { color: var(--zk-accent); }
@@ -374,8 +374,8 @@
 .mark-glyph {
   color: var(--zk-ink);
   background: currentColor;
-  -webkit-mask: url('/reason/assets/brand/zerker-mark.svg') center / contain no-repeat;
-  mask: url('/reason/assets/brand/zerker-mark.svg') center / contain no-repeat;
+  -webkit-mask: url('/reason/assets/brand/zerker-mark.svg?v=2') center / contain no-repeat;
+  mask: url('/reason/assets/brand/zerker-mark.svg?v=2') center / contain no-repeat;
 }
 .mark-glyph::before,
 .mark-glyph::after,
