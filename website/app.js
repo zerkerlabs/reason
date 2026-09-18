@@ -26,9 +26,9 @@ function page() {
 
     <header class="zr-hero">
       <div class="zr-copy">
-        <p>NEUROSYMBOLIC AUTHORIZATION FOR AI AGENTS</p>
+        <p>DETERMINISTIC AUTHORIZATION FOR AI AGENTS</p>
         <h1>Company rules,<br><strong>enforced before agents act.</strong></h1>
-        <span>Models handle ambiguous work. Reason checks the proposed action against governed facts, explicit rules, authority, and time. When Reason enforcement is configured, Gateway forwards only the exact independently verified MCP call.</span>
+        <span>Models handle ambiguous work. Reason checks the proposed action against governed facts, explicit rules, authority, and time, with no model in the decision path, and returns a certificate anyone can verify without trusting the runtime. When Reason enforcement is configured, Gateway forwards only the exact independently verified MCP call.</span>
         <div class="zr-copy-actions">
           <button class="zr-primary" type="button" data-zr-scroll="zr-demo">See the decision ${icons.arrow}</button>
           <a href="https://github.com/zerkerlabs/reason">View the source</a>
