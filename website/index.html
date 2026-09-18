@@ -19,7 +19,23 @@
   <link rel="stylesheet" href="/reason/product-family.css?v=6" />
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">
+    <!-- Static fallback. app.js replaces this on load; a crawler, an LLM, or a
+         reader with scripts off gets the real copy instead of an empty page. -->
+    <main style="max-width:760px;margin:0 auto;padding:64px 24px;font-family:Inter,-apple-system,Arial,sans-serif;line-height:1.55;color:#161616">
+      <p style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#008503;margin:0 0 16px">Deterministic authorization for AI agents</p>
+      <h1 style="font-size:44px;line-height:1.05;letter-spacing:-.03em;margin:0 0 20px">Company rules, enforced before agents act.</h1>
+      <p style="font-size:18px;max-width:640px;margin:0 0 20px">Models handle ambiguous work. Zerker Reason checks the proposed action against governed facts, explicit rules, authority, and time, with no model in the decision path, and returns a certificate anyone can verify without trusting the runtime. When Reason enforcement is configured, Zerker Gateway forwards only the exact independently verified MCP call.</p>
+      <p style="font-size:14px;color:#6b6b66;margin:0 0 28px">Open source · local first · deterministic · v0.3 · <a href="https://github.com/zerkerlabs/reason" style="color:#008503">View the source</a></p>
+      <h2 style="font-size:24px;letter-spacing:-.02em;margin:36px 0 8px">One policy bundle for every agent tool.</h2>
+      <p style="margin:0 0 20px">Teams should not have to duplicate company rules for every model vendor and coding agent. Keep the files teams already use (AGENTS.md, CLAUDE.md, skill files, security policies); a human-reviewed manifest and typed policy template lock into one bundle with a digest, and every action is authorized against that bundle with an outcome of authorized, insufficient evidence, denied, or conflicted. Only authorized can execute.</p>
+      <h2 style="font-size:24px;letter-spacing:-.02em;margin:36px 0 8px">Inspect the decision yourself.</h2>
+      <p style="margin:0 0 12px">No daemon, account, network, wall clock, or LLM is required for the symbolic check.</p>
+      <pre style="font-family:Menlo,monospace;font-size:13px;background:#f1f1ed;padding:14px 16px;border-radius:8px;overflow-x:auto;margin:0 0 28px">$ cargo run -- authorize examples/authorize-deploy.json --certificate-out authorization.json
+$ cargo run -- verify-authorization examples/authorize-deploy.json authorization.json</pre>
+      <p style="font-size:14px;color:#6b6b66;margin:0">The facts Reason checks come from governed memory (<a href="https://zmem.sh/" style="color:#008503">ZMem</a>); the certificate is preserved as a signed receipt by <a href="https://treeship.dev/" style="color:#008503">Treeship</a>; <a href="https://zerker.ai/" style="color:#008503">Zerker Gateway</a> enforces it on the exact call. Apache 2.0.</p>
+    </main>
+  </div>
   <script type="module" src="/reason/app.js?v=7"></script>
   <script type="module" src="/reason/product-switcher.js?v=5"></script>
 </body>
