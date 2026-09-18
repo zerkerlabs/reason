@@ -1,10 +1,12 @@
 # Zerker Reason
 
-A trustworthy neuro-symbolic reasoning coprocessor for agents.
+A deterministic reasoning coprocessor for agents: the model proposes, Reason decides, and the decision comes with a proof an independent checker can verify.
 
 > **Developer preview:** explore the [live certificate demo](https://zerker-reason.vercel.app) or start with the [deployment quickstart](docs/QUICKSTART.md).
 
 LLMs propose. Zerker Reason checks what follows from explicit facts and rules, identifies what is missing, and returns a deterministic proof object an independent checker can verify.
+
+The architecture is neurosymbolic in the plain sense: the model is the neural half and sits outside the trust boundary; Reason is the symbolic half and cannot call a model. Reason itself is purely symbolic, and that is the point. Planning and tool choice will keep moving into models. Authorization stays outside them because it has to be inspectable, deterministic, and checkable by a party that does not trust the runtime, and no set of weights is any of those.
 
 ## First useful workflow
 
