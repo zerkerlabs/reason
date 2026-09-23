@@ -71,6 +71,22 @@ A generic `treeship attest receipt` call after a separate verifier run is not th
 
 Reason proves authorization semantics. Treeship proves which key signed the receipt, the byte commitment, and artifact-chain placement. A Treeship signature cannot make an invalid Reason certificate valid, and the `system://zerker-reason` producer label is not an identity proof without a trusted key binding. The original private bundle must remain available for semantic replay.
 
+### Judgements as premises
+
+A Treeship `judgement.v1` receipt (`treeship judge --attest`, any judge behind the same contract) maps onto one Reason fact with the `model-judged` authority class:
+
+```json
+{
+  "id": "art_1f3c9b2e7d4a5f60b8c1d2e3f4a5b6c7",
+  "predicate": "judged_unsafe",
+  "arguments": ["action_deploy_140", "no"],
+  "authority": "model-judged",
+  "observed_at": "2026-08-14T11:30:00Z"
+}
+```
+
+`id` is the receipt's artifact id; the predicate is `judged_<question key>`; the arguments are the action id and the typed answer (`"yes"`/`"no"` for a `noul` held to the receipt's threshold, the option for a `choice`); `observed_at` is the receipt's `judged_at`. The program admits `model-judged` for `judged_*` predicates only, as in `examples/authorize-deploy-judged.json`. Reason does not verify the receipt's signature, re-run the judge, or read the receipt's `replayable` flag; an adapter that derives the fact from a verified receipt owns those checks, and a fact typed by hand carries the label without the proof. See [Model-judged evidence](AUTHORITY.md#model-judged-evidence).
+
 ## ZMem: governed premise export
 
 ZMem exports `zerker.memory.reason-premises.v1`. Its deterministically ordered `facts` array can populate the fact set of a Reason `zerker.reason.program.v2` policy after the consumer runs ZMem's current-state verifier.

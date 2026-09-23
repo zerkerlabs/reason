@@ -21,6 +21,9 @@ fn integration_profile_documentation_names_owned_boundaries() {
         "rakhshak.network.connect",
         "zerker.memory.reason-premises.v1",
         "reason.authorization.v1",
+        "judgement.v1",
+        "model-judged",
+        "authorize-deploy-judged.json",
     ] {
         assert!(
             documentation.contains(contract),
@@ -168,4 +171,92 @@ fn atom(predicate: &str, arguments: &[&str]) -> Atom {
             .collect(),
         negated: false,
     }
+}
+
+fn judged_request_json() -> Value {
+    serde_json::from_str(include_str!("../examples/authorize-deploy-judged.json")).unwrap()
+}
+
+#[test]
+fn model_judged_evidence_is_admitted_only_where_the_program_says() {
+    // As shipped: the rules judge answered "no" to judged_unsafe, the human
+    // approval and the tool-reported tests keep their own classes.
+    let request: ActionRequest = serde_json::from_value(judged_request_json()).unwrap();
+    let certificate = authorize(&request).unwrap();
+    assert_eq!(certificate.status, AuthorizationStatus::Authorized);
+    verify_authorization(&request, &certificate).unwrap();
+    let reasoning = serde_json::to_value(&certificate).unwrap();
+    assert!(
+        reasoning
+            .pointer("/reasoning/authority/withheld")
+            .and_then(Value::as_array)
+            .map(Vec::is_empty)
+            .unwrap_or(true),
+        "nothing withheld as shipped: {reasoning}"
+    );
+
+    // The judge answers "yes": an explicit denial, not a missing premise.
+    let mut judged_yes = judged_request_json();
+    let facts = judged_yes
+        .pointer_mut("/policy/facts")
+        .unwrap()
+        .as_array_mut()
+        .unwrap();
+    let judged = facts
+        .iter_mut()
+        .find(|f| f["predicate"] == "judged_unsafe")
+        .expect("the judgement fact");
+    judged["arguments"][1] = json!("yes");
+    let request: ActionRequest = serde_json::from_value(judged_yes).unwrap();
+    assert_eq!(
+        authorize(&request).unwrap().status,
+        AuthorizationStatus::Denied
+    );
+
+    // No judgement at all: UNKNOWN, never authorized by absence.
+    let mut unjudged = judged_request_json();
+    unjudged
+        .pointer_mut("/policy/facts")
+        .unwrap()
+        .as_array_mut()
+        .unwrap()
+        .retain(|f| f["predicate"] != "judged_unsafe");
+    let request: ActionRequest = serde_json::from_value(unjudged).unwrap();
+    assert_eq!(
+        authorize(&request).unwrap().status,
+        AuthorizationStatus::InsufficientEvidence
+    );
+
+    // A model cannot stand in for the human review: the label is declared,
+    // the predicate does not admit it, the fact is withheld and named.
+    let mut model_review = judged_request_json();
+    let facts = model_review
+        .pointer_mut("/policy/facts")
+        .unwrap()
+        .as_array_mut()
+        .unwrap();
+    let review = facts
+        .iter_mut()
+        .find(|f| f["predicate"] == "security_reviewed")
+        .expect("the review fact");
+    review["authority"] = json!("model-judged");
+    let request: ActionRequest = serde_json::from_value(model_review).unwrap();
+    let certificate = authorize(&request).unwrap();
+    assert_eq!(
+        certificate.status,
+        AuthorizationStatus::InsufficientEvidence
+    );
+    let withheld = serde_json::to_value(&certificate).unwrap();
+    let withheld = withheld
+        .pointer("/reasoning/authority/withheld")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+    assert!(
+        withheld
+            .iter()
+            .any(|w| w.to_string().contains("fact_review_abc")
+                && w.to_string().contains("model-judged")),
+        "the withheld model-judged review must be named: {withheld:?}"
+    );
 }

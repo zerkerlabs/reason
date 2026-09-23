@@ -81,7 +81,7 @@ A fact does not enter inference just because an agent supplied it. Programs decl
 cargo run -- check examples/release-untrusted.json
 ```
 
-An agent-proposed approval is withheld and the result remains `UNKNOWN`, with the accepted authority shown as the next requirement. See [`docs/AUTHORITY.md`](docs/AUTHORITY.md).
+An agent-proposed approval is withheld and the result remains `UNKNOWN`, with the accepted authority shown as the next requirement. A judge's answer (a Treeship `judgement.v1`) enters as `model-judged`, admitted only for the predicates that describe the judgement: `examples/authorize-deploy-judged.json` denies on `judged_unsafe(action, "yes")` and never lets a model stand in for a human approval. See [`docs/AUTHORITY.md`](docs/AUTHORITY.md).
 
 ## Authorize a release without writing policy JSON
 

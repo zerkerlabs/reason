@@ -32,6 +32,14 @@ The script:
 
 The receipt uses `system://zerker-reason` as a producer label. The label is not an identity claim unless a verifier separately trusts the Treeship signing key associated with it.
 
+## Judgements as premises
+
+The other direction: a Treeship `judgement.v1` receipt becomes a Reason premise under the `model-judged` authority class, admitted only for the predicates a program names. `examples/authorize-deploy-judged.json` requires a rules judge to have answered `judged_unsafe(action, "no")` and denies on `"yes"`; the human approval and the tool-reported tests keep their own classes. The mapping is in [Integration profiles](INTEGRATION_PROFILES.md#judgements-as-premises).
+
+```bash
+reason authorize examples/authorize-deploy-judged.json
+```
+
 ## Manual compatibility flow
 
 ```bash
