@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- The `model-judged` authority class convention: a judge's typed answer, signed by Treeship as `judgement.v1`, enters as a premise whose id is the receipt's artifact id, admitted only for `judged_*` predicates. `examples/authorize-deploy-judged.json` requires `judged_unsafe(action, "no")` and denies on `"yes"`; a model-labelled review or approval is withheld like an agent-proposed one. Documented in AUTHORITY.md, INTEGRATION_PROFILES.md and TREESHIP.md.
+
 ## [0.3.0] - 2026-09-01
 
 ### Added
